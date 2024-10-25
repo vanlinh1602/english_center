@@ -10,10 +10,13 @@ export type Courses = {
 
 export type CoursesState = {
   handling: boolean;
-  classes: Record<string, Courses>;
+  courses: Record<string, Courses>;
 };
 
 export type CoursesActions = {
   getCourses: () => void;
-  updateCourses: () => void;
+  getCourse: (id: string) => void;
+  createCourse: (course: Partial<Courses>) => void;
+  updateCourse: (id: string, course: Partial<Courses>) => void;
+  deleteCourse: (id: string) => void;
 };

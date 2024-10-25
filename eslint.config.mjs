@@ -10,7 +10,7 @@ export default [
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    ignores: ['node_modules/*', 'components/ui/'],
+    ignores: ['node_modules/*', 'components/ui/', 'hooks/'],
   },
   {
     plugins: {

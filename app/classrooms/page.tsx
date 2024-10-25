@@ -8,20 +8,13 @@ import {
   Search,
   Users,
 } from 'lucide-react';
-import { useState } from 'react';
+import moment from 'moment';
+import { useEffect, useState } from 'react';
+import { useShallow } from 'zustand/shallow';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,14 +24,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -47,190 +32,82 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import Waiting from '@/components/Waiting';
+import { ClassroomEditor } from '@/features/classroom/components';
+import { useClassroomStore } from '@/features/classroom/hooks';
+import { Classroom } from '@/features/classroom/types';
+import { useCourseStore } from '@/features/courses/hooks';
+import { classStatuses } from '@/lib/options';
 
 export default function ClassSection() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [classes, setClasses] = useState([
-    {
-      id: 1,
-      name: 'Advanced English A',
-      course: 'Advanced English',
-      teacher: 'John Doe',
-      schedule: 'Mon, Wed, Fri 10:00-12:00',
-      students: 15,
-      status: 'Active',
-    },
-    {
-      id: 2,
-      name: 'IELTS Preparation B',
-      course: 'IELTS Preparation',
-      teacher: 'Jane Smith',
-      schedule: 'Tue, Thu 14:00-16:00',
-      students: 12,
-      status: 'Active',
-    },
-    {
-      id: 3,
-      name: 'Business English C',
-      course: 'Business English',
-      teacher: 'Mike Johnson',
-      schedule: 'Mon, Wed 18:00-20:00',
-      students: 10,
-      status: 'Active',
-    },
-    {
-      id: 4,
-      name: 'Beginner English D',
-      course: 'Beginner English',
-      teacher: 'Sarah Brown',
-      schedule: 'Tue, Thu, Sat 09:00-11:00',
-      students: 18,
-      status: 'Upcoming',
-    },
-    {
-      id: 5,
-      name: 'Conversational English E',
-      course: 'Conversational English',
-      teacher: 'David Wilson',
-      schedule: 'Wed, Fri 16:00-18:00',
-      students: 8,
-      status: 'Active',
-    },
-  ]);
-
-  const filteredClasses = classes.filter(
-    (cls) =>
-      cls.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cls.course.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cls.teacher.toLowerCase().includes(searchTerm.toLowerCase())
+  const {
+    handling,
+    classes,
+    getClasses,
+    createClass,
+    updateClass,
+    deleteClass,
+  } = useClassroomStore(
+    useShallow((state) => ({
+      handling: state.handling,
+      classes: state.classes,
+      getClasses: state.getClasses,
+      createClass: state.createClass,
+      updateClass: state.updateClass,
+      deleteClass: state.deleteClass,
+    }))
   );
 
-  const [isAddClassOpen, setIsAddClassOpen] = useState(false);
-  const [newClass, setNewClass] = useState({
-    name: '',
-    course: '',
-    teacher: '',
-    schedule: '',
-    status: 'Upcoming',
-  });
+  const { courses, getCourses } = useCourseStore(
+    useShallow((state) => ({
+      courses: state.courses,
+      getCourses: state.getCourses,
+    }))
+  );
 
-  const handleAddClass = () => {
-    if (
-      newClass.name &&
-      newClass.course &&
-      newClass.teacher &&
-      newClass.schedule
-    ) {
-      setClasses([
-        ...classes,
-        { ...newClass, id: classes.length + 1, students: 0 },
-      ]);
-      setNewClass({
-        name: '',
-        course: '',
-        teacher: '',
-        schedule: '',
-        status: 'Upcoming',
-      });
-      setIsAddClassOpen(false);
+  useEffect(() => {
+    if (!Object.keys(courses).length) {
+      getCourses();
     }
-  };
+    if (!Object.keys(classes).length) {
+      getClasses();
+    }
+  }, []);
+
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredClasses = Object.values(classes).filter(
+    (cls) =>
+      cls.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      cls.course.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const [classEditor, setClassEditor] = useState<Partial<Classroom>>();
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {handling ? <Waiting /> : null}
+      {classEditor ? (
+        <ClassroomEditor
+          classroom={classEditor}
+          onCancel={() => setClassEditor(undefined)}
+          onSave={(classroomUpdate, id) => {
+            if (id) {
+              updateClass(id, classroomUpdate);
+            } else {
+              createClass(classroomUpdate);
+            }
+            setClassEditor(undefined);
+          }}
+        />
+      ) : null}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Classes</CardTitle>
-          <Dialog open={isAddClassOpen} onOpenChange={setIsAddClassOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" /> Add Class
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Class</DialogTitle>
-                <DialogDescription>
-                  Enter the details of the new class here.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="name" className="text-right">
-                    Name
-                  </Label>
-                  <Input
-                    id="name"
-                    value={newClass.name}
-                    onChange={(e) =>
-                      setNewClass({ ...newClass, name: e.target.value })
-                    }
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="course" className="text-right">
-                    Course
-                  </Label>
-                  <Select
-                    onValueChange={(value) =>
-                      setNewClass({ ...newClass, course: value })
-                    }
-                  >
-                    <SelectTrigger className="col-span-3">
-                      <SelectValue placeholder="Select a course" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Advanced English">
-                        Advanced English
-                      </SelectItem>
-                      <SelectItem value="IELTS Preparation">
-                        IELTS Preparation
-                      </SelectItem>
-                      <SelectItem value="Business English">
-                        Business English
-                      </SelectItem>
-                      <SelectItem value="Beginner English">
-                        Beginner English
-                      </SelectItem>
-                      <SelectItem value="Conversational English">
-                        Conversational English
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="teacher" className="text-right">
-                    Teacher
-                  </Label>
-                  <Input
-                    id="teacher"
-                    value={newClass.teacher}
-                    onChange={(e) =>
-                      setNewClass({ ...newClass, teacher: e.target.value })
-                    }
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="schedule" className="text-right">
-                    Schedule
-                  </Label>
-                  <Input
-                    id="schedule"
-                    value={newClass.schedule}
-                    onChange={(e) =>
-                      setNewClass({ ...newClass, schedule: e.target.value })
-                    }
-                    className="col-span-3"
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button onClick={handleAddClass}>Add Class</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={() => setClassEditor({})}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create class
+          </Button>
         </CardHeader>
         <CardContent>
           <div className="flex items-center mb-4">
@@ -261,7 +138,7 @@ export default function ClassSection() {
                   <TableCell>
                     <div className="flex items-center">
                       <Book className="mr-2 h-4 w-4 text-muted-foreground" />
-                      {cls.course}
+                      {courses[cls.course]?.name}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -271,36 +148,38 @@ export default function ClassSection() {
                           src={`https://api.dicebear.com/6.x/initials/svg?seed=${cls.teacher}`}
                         />
                         <AvatarFallback>
-                          {cls.teacher
+                          {cls.teacher?.[0]
                             .split(' ')
                             .map((n) => n[0])
                             .join('')}
                         </AvatarFallback>
                       </Avatar>
-                      {cls.teacher}
+                      {cls.teacher?.[0]}
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center">
                       <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                      {cls.schedule}
+                      {moment(cls.dateStart).format('DD/MM/YYYY')}
+                      {' - '}
+                      {moment(cls.dateEnd).format('DD/MM/YYYY')}
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center">
                       <Users className="mr-2 h-4 w-4 text-muted-foreground" />
-                      {cls.students}
+                      {cls.students?.length}
                     </div>
                   </TableCell>
                   <TableCell>
                     <div
                       className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                        cls.status === 'Active'
+                        cls.status === 'active'
                           ? 'bg-green-100 text-green-800'
                           : 'bg-yellow-100 text-yellow-800'
                       }`}
                     >
-                      {cls.status}
+                      {classStatuses[cls.status]}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -313,11 +192,16 @@ export default function ClassSection() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem>View details</DropdownMenuItem>
-                        <DropdownMenuItem>Edit class</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setClassEditor(cls)}>
+                          Edit class
+                        </DropdownMenuItem>
                         <DropdownMenuItem>Manage students</DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-red-600">
-                          Cancel class
+                        <DropdownMenuItem
+                          className="text-red-600"
+                          onClick={() => deleteClass(cls.id)}
+                        >
+                          Delete class
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

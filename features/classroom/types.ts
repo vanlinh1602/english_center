@@ -18,5 +18,8 @@ export type ClassroomState = {
 
 export type ClassroomActions = {
   getClasses: () => void;
-  updateClass: () => void;
+  getClass: (id: string) => void;
+  createClass: (classroom: Partial<Classroom>) => void;
+  updateClass: (id: string, classroom: Partial<Classroom>) => void;
+  deleteClass: (id: string) => void;
 };

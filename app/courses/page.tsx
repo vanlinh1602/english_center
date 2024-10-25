@@ -1,20 +1,19 @@
 'use client';
 
-import { Book, Clock, MoreHorizontal, Plus, Search, Users } from 'lucide-react';
-import { useState } from 'react';
+import {
+  Book,
+  Clock,
+  DollarSign,
+  MoreHorizontal,
+  Plus,
+  Search,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useShallow } from 'zustand/shallow';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,7 +23,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Table,
   TableBody,
@@ -33,142 +31,71 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import Waiting from '@/components/Waiting';
+import { CourseEditor } from '@/features/courses/components';
+import { useCourseStore } from '@/features/courses/hooks';
+import { Courses } from '@/features/courses/types';
+import { courseLevels, courseStatuses } from '@/lib/options';
+import { format } from '@/utils/number';
 
 export default function CoursesSection() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [courses, setCourses] = useState([
-    {
-      id: 1,
-      name: 'Advanced English',
-      level: 'Advanced',
-      duration: '12 weeks',
-      students: 15,
-      status: 'Active',
-    },
-    {
-      id: 2,
-      name: 'IELTS Preparation',
-      level: 'Intermediate',
-      duration: '8 weeks',
-      students: 20,
-      status: 'Active',
-    },
-    {
-      id: 3,
-      name: 'Business English',
-      level: 'Intermediate',
-      duration: '10 weeks',
-      students: 12,
-      status: 'Active',
-    },
-    {
-      id: 4,
-      name: 'Beginner English',
-      level: 'Beginner',
-      duration: '16 weeks',
-      students: 18,
-      status: 'Upcoming',
-    },
-    {
-      id: 5,
-      name: 'Conversational English',
-      level: 'Intermediate',
-      duration: '6 weeks',
-      students: 10,
-      status: 'Completed',
-    },
-  ]);
+  const {
+    courses,
+    getCourses,
+    createCourse,
+    updateCourse,
+    handing,
+    deleteCourse,
+  } = useCourseStore(
+    useShallow((state) => ({
+      handing: state.handling,
+      courses: state.courses,
+      getCourses: state.getCourses,
+      createCourse: state.createCourse,
+      updateCourse: state.updateCourse,
+      deleteCourse: state.deleteCourse,
+    }))
+  );
 
-  const filteredCourses = courses.filter(
+  useEffect(() => {
+    if (!Object.keys(courses).length) getCourses();
+  }, []);
+
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredCourses = Object.values(courses).filter(
     (course) =>
       course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       course.level.toLowerCase().includes(searchTerm.toLowerCase()) ||
       course.status.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const [isAddCourseOpen, setIsAddCourseOpen] = useState(false);
-  const [newCourse, setNewCourse] = useState({
-    name: '',
-    level: '',
-    duration: '',
-    status: 'Upcoming',
-  });
-
-  const handleAddCourse = () => {
-    if (newCourse.name && newCourse.level && newCourse.duration) {
-      setCourses([
-        ...courses,
-        { ...newCourse, id: courses.length + 1, students: 0 },
-      ]);
-      setNewCourse({ name: '', level: '', duration: '', status: 'Upcoming' });
-      setIsAddCourseOpen(false);
-    }
-  };
+  const [editCourse, setEditCourse] = useState<Partial<Courses>>();
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {handing ? <Waiting /> : null}
+      {editCourse ? (
+        <CourseEditor
+          course={editCourse}
+          onCancel={() => setEditCourse(undefined)}
+          onSave={(courseUpdate, id) => {
+            if (id) {
+              updateCourse(id, courseUpdate);
+            } else {
+              createCourse(courseUpdate);
+            }
+            setEditCourse(undefined);
+          }}
+        />
+      ) : null}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Courses</CardTitle>
-          <Dialog open={isAddCourseOpen} onOpenChange={setIsAddCourseOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" /> Add Course
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Course</DialogTitle>
-                <DialogDescription>
-                  Enter the details of the new course here.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="name" className="text-right">
-                    Name
-                  </Label>
-                  <Input
-                    id="name"
-                    value={newCourse.name}
-                    onChange={(e) =>
-                      setNewCourse({ ...newCourse, name: e.target.value })
-                    }
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="level" className="text-right">
-                    Level
-                  </Label>
-                  <Input
-                    id="level"
-                    value={newCourse.level}
-                    onChange={(e) =>
-                      setNewCourse({ ...newCourse, level: e.target.value })
-                    }
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="duration" className="text-right">
-                    Duration
-                  </Label>
-                  <Input
-                    id="duration"
-                    value={newCourse.duration}
-                    onChange={(e) =>
-                      setNewCourse({ ...newCourse, duration: e.target.value })
-                    }
-                    className="col-span-3"
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button onClick={handleAddCourse}>Add Course</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={() => setEditCourse({})}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Course
+          </Button>
         </CardHeader>
         <CardContent>
           <div className="flex items-center mb-4">
@@ -186,7 +113,7 @@ export default function CoursesSection() {
                 <TableHead>Name</TableHead>
                 <TableHead>Level</TableHead>
                 <TableHead>Duration</TableHead>
-                <TableHead>Students</TableHead>
+                <TableHead>Price</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead></TableHead>
               </TableRow>
@@ -200,30 +127,30 @@ export default function CoursesSection() {
                       {course.name}
                     </div>
                   </TableCell>
-                  <TableCell>{course.level}</TableCell>
+                  <TableCell>{courseLevels[course.level]}</TableCell>
                   <TableCell>
                     <div className="flex items-center">
                       <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
-                      {course.duration}
+                      {course.duration} weeks
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center">
-                      <Users className="mr-2 h-4 w-4 text-muted-foreground" />
-                      {course.students}
+                      <DollarSign className="mr-2 h-4 w-4 text-muted-foreground" />
+                      {format(course.price || 0)}
                     </div>
                   </TableCell>
                   <TableCell>
                     <Badge
                       variant={
-                        course.status === 'Active'
+                        course.status === 'active'
                           ? 'default'
-                          : course.status === 'Upcoming'
+                          : course.status === 'upcoming'
                           ? 'secondary'
                           : 'outline'
                       }
                     >
-                      {course.status}
+                      {courseStatuses[course.status]}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -236,9 +163,14 @@ export default function CoursesSection() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem>View details</DropdownMenuItem>
-                        <DropdownMenuItem>Edit course</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setEditCourse(course)}>
+                          Edit course
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-red-600">
+                        <DropdownMenuItem
+                          className="text-red-600"
+                          onClick={() => deleteCourse(course.id)}
+                        >
                           Delete course
                         </DropdownMenuItem>
                       </DropdownMenuContent>
