@@ -19,7 +19,7 @@ export const useCourseStore = create<CoursesState & CoursesActions>()(
   devtools((set) => ({
     ...defaultInitState,
     getCourses: async () => {
-      set(() => ({ handling: true }), false, { type: 'classes/getCourses' });
+      set(() => ({ handling: true }), false, { type: 'courses/getCourses' });
       const courses = await getCourses();
       const coursesMap = courses.reduce((acc, course) => {
         acc[course.id] = course;
@@ -27,11 +27,11 @@ export const useCourseStore = create<CoursesState & CoursesActions>()(
       }, {} as CoursesState['courses']);
 
       set(() => ({ courses: coursesMap, handling: false }), false, {
-        type: 'classes/getCourses',
+        type: 'courses/getCourses',
       });
     },
     getCourse: async (id) => {
-      set(() => ({ handling: true }), false, { type: 'classes/getCourse' });
+      set(() => ({ handling: true }), false, { type: 'courses/getCourse' });
       const course = await getCourse(id);
       if (course) {
         set(
@@ -41,19 +41,19 @@ export const useCourseStore = create<CoursesState & CoursesActions>()(
           }),
           false,
           {
-            type: 'classes/getCourse',
+            type: 'courses/getCourse',
           }
         );
       } else {
-        set(() => ({ handling: false }), false, { type: 'classes/getCourse' });
+        set(() => ({ handling: false }), false, { type: 'courses/getCourse' });
       }
     },
     createCourse: async (course) => {
-      set(() => ({ handling: true }), false, { type: 'classes/createCourse' });
+      set(() => ({ handling: true }), false, { type: 'courses/createCourse' });
       const newCourse = await createCourse(course);
       if (!newCourse) {
         set(() => ({ handling: false }), false, {
-          type: 'classes/createCourse',
+          type: 'courses/createCourse',
         });
         return;
       }
@@ -63,15 +63,15 @@ export const useCourseStore = create<CoursesState & CoursesActions>()(
           handling: false,
         }),
         false,
-        { type: 'classes/createCourse' }
+        { type: 'courses/createCourse' }
       );
     },
     updateCourse: async (id, course) => {
-      set(() => ({ handling: true }), false, { type: 'classes/updateCourse' });
+      set(() => ({ handling: true }), false, { type: 'courses/updateCourse' });
       const updatedCourse = await updateCourse(id, course);
       if (!updatedCourse) {
         set(() => ({ handling: false }), false, {
-          type: 'classes/updateCourse',
+          type: 'courses/updateCourse',
         });
         return;
       }
@@ -87,15 +87,15 @@ export const useCourseStore = create<CoursesState & CoursesActions>()(
           handling: false,
         }),
         false,
-        { type: 'classes/updateCourse' }
+        { type: 'courses/updateCourse' }
       );
     },
     deleteCourse: async (id) => {
-      set(() => ({ handling: true }), false, { type: 'classes/deleteCourse' });
+      set(() => ({ handling: true }), false, { type: 'courses/deleteCourse' });
       const success = await deleteCourse(id);
       if (!success) {
         set(() => ({ handling: false }), false, {
-          type: 'classes/deleteCourse',
+          type: 'courses/deleteCourse',
         });
         return;
       }
@@ -106,7 +106,7 @@ export const useCourseStore = create<CoursesState & CoursesActions>()(
           return { courses: newCourses, handling: false };
         },
         false,
-        { type: 'classes/deleteCourse' }
+        { type: 'courses/deleteCourse' }
       );
     },
   }))

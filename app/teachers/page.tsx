@@ -1,28 +1,12 @@
 'use client';
 
-import {
-  Book,
-  Mail,
-  MoreHorizontal,
-  Phone,
-  Plus,
-  Search,
-  Star,
-} from 'lucide-react';
-import { useState } from 'react';
+import { Mail, MoreHorizontal, Phone, Plus, Search } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useShallow } from 'zustand/shallow';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,7 +16,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Table,
   TableBody,
@@ -41,165 +24,69 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import Waiting from '@/components/Waiting';
+import { TeacherEditor } from '@/features/teachers/components';
+import { useTeacherStore } from '@/features/teachers/hooks';
+import { Teacher } from '@/features/teachers/types';
 
 export default function TeacherSection() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [teachers, setTeachers] = useState([
-    {
-      id: 1,
-      name: 'John Doe',
-      email: 'john.doe@example.com',
-      phone: '+1 234 567 890',
-      specialization: 'Advanced English',
-      rating: 4.8,
-    },
-    {
-      id: 2,
-      name: 'Jane Smith',
-      email: 'jane.smith@example.com',
-      phone: '+1 234 567 891',
-      specialization: 'IELTS Preparation',
-      rating: 4.9,
-    },
-    {
-      id: 3,
-      name: 'Mike Johnson',
-      email: 'mike.johnson@example.com',
-      phone: '+1 234 567 892',
-      specialization: 'Business English',
-      rating: 4.7,
-    },
-    {
-      id: 4,
-      name: 'Sarah Brown',
-      email: 'sarah.brown@example.com',
-      phone: '+1 234 567 893',
-      specialization: 'Beginner English',
-      rating: 4.6,
-    },
-    {
-      id: 5,
-      name: 'David Wilson',
-      email: 'david.wilson@example.com',
-      phone: '+1 234 567 894',
-      specialization: 'Conversational English',
-      rating: 4.8,
-    },
-  ]);
-
-  const filteredTeachers = teachers.filter(
-    (teacher) =>
-      teacher.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      teacher.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      teacher.specialization.toLowerCase().includes(searchTerm.toLowerCase())
+  const {
+    handling,
+    teachers,
+    getTeachers,
+    createTeacher,
+    updateTeacher,
+    deleteTeacher,
+  } = useTeacherStore(
+    useShallow((state) => ({
+      handling: state.handling,
+      teachers: state.teachers,
+      getTeachers: state.getTeachers,
+      createTeacher: state.createTeacher,
+      updateTeacher: state.updateTeacher,
+      deleteTeacher: state.deleteTeacher,
+    }))
   );
 
-  const [isAddTeacherOpen, setIsAddTeacherOpen] = useState(false);
-  const [newTeacher, setNewTeacher] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    specialization: '',
-  });
-
-  const handleAddTeacher = () => {
-    if (
-      newTeacher.name &&
-      newTeacher.email &&
-      newTeacher.phone &&
-      newTeacher.specialization
-    ) {
-      setTeachers([
-        ...teachers,
-        { ...newTeacher, id: teachers.length + 1, rating: 0 },
-      ]);
-      setNewTeacher({ name: '', email: '', phone: '', specialization: '' });
-      setIsAddTeacherOpen(false);
+  useEffect(() => {
+    if (!Object.keys(teachers).length) {
+      getTeachers();
     }
-  };
+  }, []);
+
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredTeachers = Object.values(teachers).filter(
+    (teacher) =>
+      teacher.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      teacher.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const [teacherEditor, setTeacherEditor] = useState<Partial<Teacher>>();
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {handling ? <Waiting /> : null}
+      {teacherEditor ? (
+        <TeacherEditor
+          teacher={teacherEditor}
+          onCancel={() => setTeacherEditor(undefined)}
+          onSave={(teacher) => {
+            if (teacherEditor.id) {
+              updateTeacher(teacherEditor.id, teacher);
+            } else {
+              createTeacher(teacher);
+            }
+            setTeacherEditor(undefined);
+          }}
+        />
+      ) : null}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Teachers</CardTitle>
-          <Dialog open={isAddTeacherOpen} onOpenChange={setIsAddTeacherOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" /> Add Teacher
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Teacher</DialogTitle>
-                <DialogDescription>
-                  Enter the details of the new teacher here.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="name" className="text-right">
-                    Name
-                  </Label>
-                  <Input
-                    id="name"
-                    value={newTeacher.name}
-                    onChange={(e) =>
-                      setNewTeacher({ ...newTeacher, name: e.target.value })
-                    }
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="email" className="text-right">
-                    Email
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={newTeacher.email}
-                    onChange={(e) =>
-                      setNewTeacher({ ...newTeacher, email: e.target.value })
-                    }
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="phone" className="text-right">
-                    Phone
-                  </Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={newTeacher.phone}
-                    onChange={(e) =>
-                      setNewTeacher({ ...newTeacher, phone: e.target.value })
-                    }
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="specialization" className="text-right">
-                    Specialization
-                  </Label>
-                  <Input
-                    id="specialization"
-                    value={newTeacher.specialization}
-                    onChange={(e) =>
-                      setNewTeacher({
-                        ...newTeacher,
-                        specialization: e.target.value,
-                      })
-                    }
-                    className="col-span-3"
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button onClick={handleAddTeacher}>Add Teacher</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={() => setTeacherEditor({})}>
+            <Plus className="mr-2 h-4 w-4" /> Add Teacher
+          </Button>
         </CardHeader>
         <CardContent>
           <div className="flex items-center mb-4">
@@ -215,10 +102,10 @@ export default function TeacherSection() {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
+                <TableHead>Gender</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
-                <TableHead>Specialization</TableHead>
-                <TableHead>Rating</TableHead>
+                <TableHead>Address</TableHead>
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
@@ -243,6 +130,11 @@ export default function TeacherSection() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center">
+                      {teacher.gender.toLocaleUpperCase()}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center">
                       <Mail className="mr-2 h-4 w-4 text-muted-foreground" />
                       {teacher.email}
                     </div>
@@ -253,16 +145,11 @@ export default function TeacherSection() {
                       {teacher.phone}
                     </div>
                   </TableCell>
+
                   <TableCell>
                     <div className="flex items-center">
-                      <Book className="mr-2 h-4 w-4 text-muted-foreground" />
-                      {teacher.specialization}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center">
-                      <Star className="mr-2 h-4 w-4 text-yellow-400" />
-                      {teacher.rating}
+                      {/* <Star className="mr-2 h-4 w-4 text-yellow-400" /> */}
+                      {teacher.address}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -275,10 +162,17 @@ export default function TeacherSection() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem>View profile</DropdownMenuItem>
-                        <DropdownMenuItem>Edit details</DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => setTeacherEditor(teacher)}
+                        >
+                          Edit details
+                        </DropdownMenuItem>
                         <DropdownMenuItem>Assign courses</DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-red-600">
+                        <DropdownMenuItem
+                          className="text-red-600"
+                          onClick={() => deleteTeacher(teacher.id)}
+                        >
                           Remove teacher
                         </DropdownMenuItem>
                       </DropdownMenuContent>
