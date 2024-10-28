@@ -11,9 +11,9 @@ export const CLASSROON_BACKEND =
 export const STUDENTS_BACKEND =
   process.env.REACT_APP_STAGE === 'development'
     ? 'http://localhost:3200/students'
-    : 'https://be-english-person.id.vn/students';
+    : 'https://be-english-person.kuma.id.vn/students';
 
 export const TEACHERS_BACKEND =
   process.env.REACT_APP_STAGE === 'development'
     ? 'http://localhost:3200/teachers'
-    : 'https://be-english-person.id.vn/teachers';
+    : 'https://be-english-person.kuma.id.vn/teachers';
