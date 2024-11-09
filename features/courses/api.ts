@@ -2,7 +2,7 @@ import { toast } from '@/hooks/use-toast';
 import formatError from '@/lib/formatError';
 import { coursesService } from '@/services';
 
-import { Courses } from './types';
+import { Courses, CourseSyllabus } from './types';
 
 export const getCourses = async (): Promise<Courses[]> => {
   try {
@@ -10,7 +10,7 @@ export const getCourses = async (): Promise<Courses[]> => {
     if (result.kind === 'ok') {
       return result.data;
     }
-    throw result;
+    throw result.error;
   } catch (error) {
     toast({
       title: 'Error',
@@ -25,13 +25,11 @@ export const getFilteredCourses = async (
   filter: Partial<Courses>
 ): Promise<Courses[]> => {
   try {
-    const result = await coursesService.get<Courses[]>('/get', {
-      filter,
-    });
+    const result = await coursesService.get<Courses[]>('/get', filter);
     if (result.kind === 'ok') {
       return result.data;
     }
-    throw result;
+    throw result.error;
   } catch (error) {
     toast({
       title: 'Error',
@@ -50,7 +48,7 @@ export const createCourse = async (
     if (result.kind === 'ok') {
       return result.data;
     }
-    throw result;
+    throw result.error;
   } catch (error) {
     toast({
       title: 'Error',
@@ -73,7 +71,7 @@ export const updateCourse = async (
     if (result.kind === 'ok') {
       return result.data.success;
     }
-    throw result;
+    throw result.error;
   } catch (error) {
     toast({
       title: 'Error',
@@ -92,7 +90,72 @@ export const deleteCourse = async (id: string): Promise<boolean> => {
     if (result.kind === 'ok') {
       return result.data.success;
     }
-    throw result;
+    throw result.error;
+  } catch (error) {
+    toast({
+      title: 'Error',
+      description: formatError(error),
+      variant: 'destructive',
+    });
+    return false;
+  }
+};
+
+// Syllabus
+export const createSyllabus = async (
+  syllabus: Partial<CourseSyllabus>
+): Promise<CourseSyllabus | null> => {
+  try {
+    const result = await coursesService.post<CourseSyllabus>(
+      '/syllabus/create',
+      syllabus
+    );
+    if (result.kind === 'ok') {
+      return result.data;
+    }
+    throw result.error;
+  } catch (error) {
+    toast({
+      title: 'Error',
+      description: formatError(error),
+      variant: 'destructive',
+    });
+    return null;
+  }
+};
+
+export const getSyllabus = async (
+  courseId: string
+): Promise<CourseSyllabus | null> => {
+  try {
+    const result = await coursesService.get<CourseSyllabus>('/syllabus/get', {
+      courseId,
+    });
+    if (result.kind === 'ok') {
+      return result.data;
+    }
+    throw result.error;
+  } catch {
+    return null;
+  }
+};
+
+export const updateSyllabus = async (
+  courseId: string,
+  syllabus: Partial<CourseSyllabus>
+): Promise<boolean> => {
+  try {
+    const result = await coursesService.post<{ success: boolean }>(
+      '/syllabus/update',
+      {
+        courseId,
+        syllabus,
+      }
+    );
+    if (result.kind === 'ok') {
+      return result.data.success;
+    }
+    throw result.error;
   } catch (error) {
     toast({
       title: 'Error',

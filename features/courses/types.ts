@@ -6,8 +6,8 @@ export type Courses = {
   level: string;
   status: string;
   price: number;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 };
 
 export type CourseSyllabus = {
@@ -16,13 +16,14 @@ export type CourseSyllabus = {
     week: number;
     description: string;
   }[];
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 };
 
 export type CoursesState = {
   handling: boolean;
   courses: Record<string, Courses>;
+  syllabus: Record<string, CourseSyllabus>;
 };
 
 export type CoursesActions = {
@@ -31,4 +32,8 @@ export type CoursesActions = {
   createCourse: (course: Partial<Courses>) => void;
   updateCourse: (id: string, course: Partial<Courses>) => void;
   deleteCourse: (id: string) => void;
+  // Syllabus
+  createSyllabus: (syllabus: Partial<CourseSyllabus>) => void;
+  getSyllabus: (courseId: string) => void;
+  updateSyllabus: (courseId: string, syllabus: Partial<CourseSyllabus>) => void;
 };

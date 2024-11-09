@@ -3,16 +3,20 @@ import { devtools } from 'zustand/middleware';
 
 import {
   createCourse,
+  createSyllabus,
   deleteCourse,
   getCourses,
   getFilteredCourses,
+  getSyllabus,
   updateCourse,
+  updateSyllabus,
 } from './api';
 import { CoursesActions, CoursesState } from './types';
 
 export const defaultInitState: CoursesState = {
   handling: false,
   courses: {},
+  syllabus: {},
 };
 
 export const useCourseStore = create<CoursesState & CoursesActions>()(
@@ -108,6 +112,65 @@ export const useCourseStore = create<CoursesState & CoursesActions>()(
         },
         false,
         { type: 'courses/deleteCourse' }
+      );
+    },
+    // Syllabus
+    createSyllabus: async (syllabus) => {
+      set(() => ({ handling: true }), false, {
+        type: 'courses/createSyllabus',
+      });
+      const newSyllabus = await createSyllabus(syllabus);
+      if (!newSyllabus) {
+        set(() => ({ handling: false }), false, {
+          type: 'courses/createSyllabus',
+        });
+        return;
+      }
+      set(
+        (s) => ({
+          syllabus: { ...s.syllabus, [newSyllabus.course]: newSyllabus },
+          handling: false,
+        }),
+        false,
+        { type: 'courses/createSyllabus' }
+      );
+    },
+    getSyllabus: async (courseId) => {
+      set(() => ({ handling: true }), false, { type: 'courses/getSyllabus' });
+      const syllabus = await getSyllabus(courseId);
+      if (!syllabus) {
+        set(() => ({ handling: false }), false, {
+          type: 'courses/getSyllabus',
+        });
+        return;
+      }
+      set(
+        (s) => ({
+          handling: false,
+          syllabus: { ...s.syllabus, [syllabus.course]: syllabus },
+        }),
+        false,
+        { type: 'courses/getSyllabus' }
+      );
+    },
+    updateSyllabus: async (courseId, syllabus) => {
+      set(() => ({ handling: true }), false, {
+        type: 'courses/updateSyllabus',
+      });
+      const success = await updateSyllabus(courseId, syllabus);
+      if (!success) {
+        set(() => ({ handling: false }), false, {
+          type: 'courses/updateSyllabus',
+        });
+        return;
+      }
+      set(
+        (s) => ({
+          syllabus: { ...s.syllabus, [courseId]: syllabus as any },
+          handling: false,
+        }),
+        false,
+        { type: 'courses/updateSyllabus' }
       );
     },
   }))
