@@ -8,6 +8,7 @@ import {
   Plus,
   Search,
 } from 'lucide-react';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useShallow } from 'zustand/shallow';
 
@@ -162,7 +163,11 @@ export default function CoursesSection() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>View details</DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Link href={`/courses/${course.id}`}>
+                            View course
+                          </Link>
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setEditCourse(course)}>
                           Edit course
                         </DropdownMenuItem>

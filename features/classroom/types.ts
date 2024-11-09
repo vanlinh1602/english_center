@@ -2,13 +2,16 @@ export type Classroom = {
   id: string;
   name: string;
   course: string;
+  room: string;
   teacher: string[];
   students: string[];
+  maxStudents: number;
   daysInWeek: string[];
   hoursInDay: string;
   dateStart: number;
   dateEnd: number;
   status: string;
+  completedSyallbus?: Record<string, boolean>;
 };
 
 export type ClassroomState = {

@@ -6,6 +6,18 @@ export type Courses = {
   level: string;
   status: string;
   price: number;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type CourseSyllabus = {
+  course: string;
+  styllabus: {
+    week: number;
+    description: string;
+  }[];
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 export type CoursesState = {

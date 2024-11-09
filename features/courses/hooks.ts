@@ -4,8 +4,8 @@ import { devtools } from 'zustand/middleware';
 import {
   createCourse,
   deleteCourse,
-  getCourse,
   getCourses,
+  getFilteredCourses,
   updateCourse,
 } from './api';
 import { CoursesActions, CoursesState } from './types';
@@ -32,7 +32,8 @@ export const useCourseStore = create<CoursesState & CoursesActions>()(
     },
     getCourse: async (id) => {
       set(() => ({ handling: true }), false, { type: 'courses/getCourse' });
-      const course = await getCourse(id);
+      const result = await getFilteredCourses({ id });
+      const course = result[0];
       if (course) {
         set(
           (s) => ({

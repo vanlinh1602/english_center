@@ -6,7 +6,7 @@ import { Courses } from './types';
 
 export const getCourses = async (): Promise<Courses[]> => {
   try {
-    const result = await coursesService.get<Courses[]>('/get/all');
+    const result = await coursesService.get<Courses[]>('/get');
     if (result.kind === 'ok') {
       return result.data;
     }
@@ -21,9 +21,13 @@ export const getCourses = async (): Promise<Courses[]> => {
   }
 };
 
-export const getCourse = async (id: string): Promise<Courses | null> => {
+export const getFilteredCourses = async (
+  filter: Partial<Courses>
+): Promise<Courses[]> => {
   try {
-    const result = await coursesService.get<Courses>(`/get/${id}`);
+    const result = await coursesService.get<Courses[]>('/get', {
+      filter,
+    });
     if (result.kind === 'ok') {
       return result.data;
     }
@@ -34,7 +38,7 @@ export const getCourse = async (id: string): Promise<Courses | null> => {
       description: formatError(error),
       variant: 'destructive',
     });
-    return null;
+    return [];
   }
 };
 

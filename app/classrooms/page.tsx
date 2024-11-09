@@ -9,6 +9,7 @@ import {
   Users,
 } from 'lucide-react';
 import moment from 'moment';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useShallow } from 'zustand/shallow';
 
@@ -191,7 +192,9 @@ export default function ClassSection() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>View details</DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Link href={`/classrooms/${cls.id}`}>View class</Link>
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setClassEditor(cls)}>
                           Edit class
                         </DropdownMenuItem>

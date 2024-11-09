@@ -44,7 +44,7 @@ export const MainLayout = ({ children }: Props) => {
             'Students',
             'Teachers',
             'Reports',
-            'Revenue',
+            // 'Revenue',
           ].map((item) => (
             <Link
               href={item === 'Dashboard' ? '/' : `/${item.toLowerCase()}`}
