@@ -6,7 +6,7 @@ import { Teacher } from './types';
 
 export const getTeachers = async (): Promise<Teacher[]> => {
   try {
-    const result = await teachersService.get<Teacher[]>('/get/all');
+    const result = await teachersService.get<Teacher[]>('/get');
     if (result.kind === 'ok') {
       return result.data;
     }
@@ -21,9 +21,11 @@ export const getTeachers = async (): Promise<Teacher[]> => {
   }
 };
 
-export const getTeacher = async (id: string): Promise<Teacher | null> => {
+export const getFilterTeacher = async (
+  filter: Partial<Teacher>
+): Promise<Teacher[]> => {
   try {
-    const result = await teachersService.get<Teacher>(`/get/${id}`);
+    const result = await teachersService.get<Teacher[]>('/get', filter);
     if (result.kind === 'ok') {
       return result.data;
     }
@@ -34,7 +36,7 @@ export const getTeacher = async (id: string): Promise<Teacher | null> => {
       description: formatError(error),
       variant: 'destructive',
     });
-    return null;
+    return [];
   }
 };
 

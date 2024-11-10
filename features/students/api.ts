@@ -6,7 +6,7 @@ import { Student } from './types';
 
 export const getStudents = async (): Promise<Student[]> => {
   try {
-    const result = await studentsService.get<Student[]>('/get/all');
+    const result = await studentsService.get<Student[]>('/get');
     if (result.kind === 'ok') {
       return result.data;
     }
@@ -21,9 +21,11 @@ export const getStudents = async (): Promise<Student[]> => {
   }
 };
 
-export const getStudent = async (id: string): Promise<Student | null> => {
+export const getFilterStudents = async (
+  filter: Partial<Student>
+): Promise<Student[]> => {
   try {
-    const result = await studentsService.get<Student>(`/get/${id}`);
+    const result = await studentsService.get<Student[]>('/get', filter);
     if (result.kind === 'ok') {
       return result.data;
     }
@@ -34,7 +36,7 @@ export const getStudent = async (id: string): Promise<Student | null> => {
       description: formatError(error),
       variant: 'destructive',
     });
-    return null;
+    return [];
   }
 };
 

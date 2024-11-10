@@ -1,9 +1,6 @@
-import { format } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
 import {
   Dialog,
   DialogContent,
@@ -15,11 +12,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -28,7 +20,6 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
 
 import { Teacher } from '../../types';
 
@@ -100,33 +91,14 @@ const TeacherEditor = ({ teacher, onCancel, onSave }: Props) => {
               <span className="text-red-600">*</span>
             </Label>
             <div className="col-span-3">
-              <Popover>
-                <PopoverTrigger asChild className="col-span-3">
-                  <Button
-                    variant={'outline'}
-                    className={cn(
-                      'justify-start text-left font-normal',
-                      !date && 'text-muted-foreground col-span-3'
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? (
-                      <>{format(date, 'LLL dd, y')}</>
-                    ) : (
-                      <span>Pick a date</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 col-span-3">
-                  <Calendar
-                    className="w-full"
-                    mode="single"
-                    selected={date}
-                    onSelect={(newDate) => setDate(newDate)}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+              <Input
+                className="col-span-3"
+                type="date"
+                value={date?.toISOString().split('T')[0]}
+                onChange={(e) => {
+                  setDate(new Date(e.target.value));
+                }}
+              />
             </div>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">

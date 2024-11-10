@@ -1,17 +1,31 @@
-import { Book, Calendar, GraduationCap, Mail, Phone, Star } from 'lucide-react';
+'use client';
+
+import { cloneDeep, set } from 'lodash';
+import {
+  Book,
+  BookUser,
+  Cake,
+  Calendar,
+  GraduationCap,
+  Mail,
+  Pencil,
+  Phone,
+  Trash2,
+} from 'lucide-react';
+import moment from 'moment';
+import { useParams } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
+import { useShallow } from 'zustand/shallow';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import {
   Table,
@@ -21,84 +35,94 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import Waiting from '@/components/Waiting';
+import { useClassroomStore } from '@/features/classroom/hooks';
+import { QualificationsEditor } from '@/features/teachers/components';
+import { useTeacherStore } from '@/features/teachers/hooks';
+import { classDays } from '@/lib/options';
 
-export default function TeacherInfo({
-  teacher = {
-    id: 'T1001',
-    name: 'Dr. Emily Johnson',
-    avatar: 'https://i.pravatar.cc/300?img=47',
-    email: 'emily.johnson@englishcenter.com',
-    phone: '+1 (555) 123-4567',
-    qualifications: [
-      'Ph.D. in Applied Linguistics, Stanford University',
-      'CELTA Certification',
-      '10+ years of teaching experience',
-    ],
-    specializations: [
-      'Business English',
-      'IELTS Preparation',
-      'Academic Writing',
-    ],
-    bio: 'Dr. Emily Johnson is a passionate educator with over a decade of experience in teaching English as a second language. Her research focuses on innovative teaching methodologies and cross-cultural communication.',
-    courses: [
-      {
-        id: 'C1',
-        name: 'Advanced Business English',
-        level: 'C1',
-        students: 15,
-      },
-      { id: 'C2', name: 'IELTS Preparation', level: 'B2-C1', students: 20 },
-      {
-        id: 'C3',
-        name: 'Academic Writing Workshop',
-        level: 'B2',
-        students: 12,
-      },
-    ],
-    schedule: [
-      { day: 'Monday', slots: ['09:00 - 11:00', '14:00 - 16:00'] },
-      { day: 'Wednesday', slots: ['09:00 - 11:00', '14:00 - 16:00'] },
-      { day: 'Friday', slots: ['10:00 - 12:00', '15:00 - 17:00'] },
-    ],
-    ratings: {
-      overall: 4.8,
-      knowledge: 4.9,
-      communication: 4.7,
-      punctuality: 4.8,
-    },
-  },
-}) {
+export default function TeacherInfo() {
+  const { id } = useParams<{ id: string }>();
+
+  const { handling, teachers, getTeachers, updateTeacher } = useTeacherStore(
+    useShallow((state) => ({
+      handling: state.handling,
+      teachers: state.teachers,
+      getTeachers: state.getTeachers,
+      updateTeacher: state.updateTeacher,
+    }))
+  );
+
+  const { classrooms, getClassrooms } = useClassroomStore(
+    useShallow((state) => ({
+      classrooms: state.classes,
+      getClassrooms: state.getClasses,
+    }))
+  );
+
+  const teacher = useMemo(() => teachers[id], [teachers, id]);
+  const teacherClasses = useMemo(
+    () =>
+      Object.values(classrooms ?? {}).filter((cls) =>
+        cls.teachers.includes(id)
+      ),
+    [classrooms, id]
+  );
+  useEffect(() => {
+    if (!teacher) {
+      getTeachers();
+    }
+    if (!Object.keys(classrooms).length) {
+      getClassrooms();
+    }
+  }, [teacher, classrooms]);
+
+  const [editQualifications, setEditQualifications] = useState<number>();
+
   return (
     <div className="container mx-auto p-4 space-y-6">
+      {handling ? <Waiting /> : null}
+      {editQualifications !== undefined ? (
+        <QualificationsEditor
+          initialData={teacher?.qualifications?.[editQualifications]}
+          onSave={(data) => {
+            const newQualifications = cloneDeep(teacher?.qualifications || []);
+            if (editQualifications === -1) {
+              newQualifications.push(data);
+            } else {
+              set(newQualifications, [editQualifications], data);
+            }
+            updateTeacher(id, { qualifications: newQualifications });
+            setEditQualifications(undefined);
+          }}
+          onCancel={() => setEditQualifications(undefined)}
+        />
+      ) : null}
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex items-center gap-4">
               <Avatar className="w-24 h-24">
-                <AvatarImage src={teacher.avatar} alt={teacher.name} />
+                <AvatarImage
+                  src={
+                    teacher?.avatar ||
+                    `https://api.dicebear.com/6.x/initials/svg?seed=${teacher?.name}`
+                  }
+                  alt={teacher?.name}
+                />
                 <AvatarFallback>
-                  {teacher.name
+                  {teacher?.name
                     .split(' ')
                     .map((n) => n[0])
                     .join('')}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <CardTitle className="text-3xl">{teacher.name}</CardTitle>
+                <CardTitle className="text-3xl">{teacher?.name}</CardTitle>
                 <CardDescription className="text-lg">
-                  Teacher ID: {teacher.id}
+                  Teacher ID: {teacher?.id}
                 </CardDescription>
               </div>
-            </div>
-            <div className="flex flex-col items-end gap-2">
-              <div className="flex items-center">
-                <Star className="w-5 h-5 text-yellow-400 mr-1" />
-                <span className="font-bold text-lg">
-                  {teacher.ratings.overall}
-                </span>
-                <span className="text-muted-foreground ml-1">/ 5</span>
-              </div>
-              <Badge variant="outline">Top Rated</Badge>
             </div>
           </div>
         </CardHeader>
@@ -106,40 +130,59 @@ export default function TeacherInfo({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex items-center space-x-2">
               <Mail className="h-5 w-5 text-muted-foreground" />
-              <span>{teacher.email}</span>
+              <span>{teacher?.email}</span>
             </div>
             <div className="flex items-center space-x-2">
               <Phone className="h-5 w-5 text-muted-foreground" />
-              <span>{teacher.phone}</span>
+              <span>{teacher?.phone}</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Cake className="h-4 w-4 text-muted-foreground" />
+              <span>{moment(teacher?.birthdate).format('DD/MM/YYYY')}</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <BookUser className="h-4 w-4 text-muted-foreground" />
+              <span>{teacher?.address}</span>
             </div>
           </div>
 
           <Separator />
 
           <div>
-            <h3 className="font-semibold text-lg mb-2 flex items-center">
-              <GraduationCap className="h-5 w-5 mr-2" />
-              Qualifications & Specializations
-            </h3>
-            <ul className="list-disc list-inside space-y-1">
-              {teacher.qualifications.map((qual, index) => (
-                <li key={index}>{qual}</li>
+            <div className="flex justify-between">
+              <h3 className="font-semibold text-lg mb-2 flex items-center">
+                <GraduationCap className="h-5 w-5 mr-2" />
+                Qualifications & Specializations
+              </h3>
+              <Button onClick={() => setEditQualifications(-1)}>
+                Add Qualification
+              </Button>
+            </div>
+            <ul className="list-disc list-inside space-y-1 mt-2">
+              {teacher?.qualifications?.map((qual, index) => (
+                <div className="flex justify-between">
+                  <span className="font-semibold">- {qual}</span>
+                  <div className="flex space-x-2">
+                    <Pencil
+                      className="w-5 h-5"
+                      onClick={() => setEditQualifications(index)}
+                    />
+                    <Trash2
+                      className="w-5 h-5 text-destructive"
+                      onClick={() => {
+                        const newQualifications = cloneDeep(
+                          teacher?.qualifications || []
+                        );
+                        newQualifications.splice(index, 1);
+                        updateTeacher(id, {
+                          qualifications: newQualifications,
+                        });
+                      }}
+                    />
+                  </div>
+                </div>
               ))}
             </ul>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {teacher.specializations.map((spec, index) => (
-                <Badge key={index} variant="secondary">
-                  {spec}
-                </Badge>
-              ))}
-            </div>
-          </div>
-
-          <Separator />
-
-          <div>
-            <h3 className="font-semibold text-lg mb-2">Bio</h3>
-            <p>{teacher.bio}</p>
           </div>
 
           <Separator />
@@ -153,16 +196,16 @@ export default function TeacherInfo({
               <TableHeader>
                 <TableRow>
                   <TableHead>Course Name</TableHead>
-                  <TableHead>Level</TableHead>
+                  <TableHead>Room</TableHead>
                   <TableHead>Students</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {teacher.courses.map((course) => (
-                  <TableRow key={course.id}>
-                    <TableCell className="font-medium">{course.name}</TableCell>
-                    <TableCell>{course.level}</TableCell>
-                    <TableCell>{course.students}</TableCell>
+                {teacherClasses?.map((cls) => (
+                  <TableRow key={cls.id}>
+                    <TableCell className="font-medium">{cls.name}</TableCell>
+                    <TableCell>{cls.room}</TableCell>
+                    <TableCell>{cls.students?.length} students</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -179,15 +222,29 @@ export default function TeacherInfo({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Day</TableHead>
+                  <TableHead>Days In Week</TableHead>
                   <TableHead>Time Slots</TableHead>
+                  <TableHead>Schedule</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {teacher.schedule.map((day, index) => (
+                {teacherClasses?.map((cls, index) => (
                   <TableRow key={index}>
-                    <TableCell className="font-medium">{day.day}</TableCell>
-                    <TableCell>{day.slots.join(', ')}</TableCell>
+                    <TableCell className="font-medium">
+                      {cls.schedule.daysInWeek
+                        ?.map((v) => classDays[v])
+                        .join(', ') || 'N/A'}
+                    </TableCell>
+                    <TableCell>
+                      {cls.schedule?.hoursInDay?.start}
+                      {' - '}
+                      {cls.schedule?.hoursInDay?.end}
+                    </TableCell>
+                    <TableCell>
+                      {moment(cls.schedule.start).format('DD/MM/YYYY')}
+                      {' - '}
+                      {moment(cls.schedule.end).format('DD/MM/YYYY')}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -195,33 +252,7 @@ export default function TeacherInfo({
           </div>
 
           <Separator />
-
-          <div>
-            <h3 className="font-semibold text-lg mb-2 flex items-center">
-              <Star className="h-5 w-5 mr-2" />
-              Teacher Ratings
-            </h3>
-            <div className="space-y-2">
-              {Object.entries(teacher.ratings).map(([key, value]) => (
-                <div key={key} className="flex items-center">
-                  <span className="w-32 capitalize">{key}:</span>
-                  <Progress value={value * 20} className="w-full max-w-xs" />
-                  <span className="ml-2">{value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
         </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button variant="outline">
-            <Calendar className="h-4 w-4 mr-2" />
-            Book a Class
-          </Button>
-          <Button variant="outline">
-            <Mail className="h-4 w-4 mr-2" />
-            Contact Teacher
-          </Button>
-        </CardFooter>
       </Card>
     </div>
   );

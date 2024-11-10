@@ -4,7 +4,7 @@ import { devtools } from 'zustand/middleware';
 import {
   createTeacher,
   deleteTeacher,
-  getTeacher,
+  getFilterTeacher,
   getTeachers,
   updateTeacher,
 } from './api';
@@ -32,7 +32,8 @@ export const useTeacherStore = create<TeacherState & TeacherActions>()(
     },
     getTeacher: async (id) => {
       set(() => ({ handling: true }), false, { type: 'teachers/getTeacher' });
-      const teacher = await getTeacher(id);
+      const result = await getFilterTeacher({ id });
+      const teacher = result[0];
       if (teacher) {
         set(
           (s) => ({

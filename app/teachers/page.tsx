@@ -1,6 +1,7 @@
 'use client';
 
 import { Mail, MoreHorizontal, Phone, Plus, Search } from 'lucide-react';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useShallow } from 'zustand/shallow';
 
@@ -161,7 +162,11 @@ export default function TeacherSection() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>View profile</DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Link href={`/teachers/${teacher.id}`}>
+                            View teacher
+                          </Link>
+                        </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => setTeacherEditor(teacher)}
                         >

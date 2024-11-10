@@ -3,9 +3,13 @@ export type Teacher = {
   name: string;
   email: string;
   phone: string;
+  avatar?: string;
   birthdate: number;
   gender: string;
   address: string;
+  qualifications?: string[];
+  createdAt?: Date;
+  updatedAt?: Date;
 };
 
 export type TeacherState = {

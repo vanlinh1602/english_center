@@ -1,11 +1,16 @@
 export type Student = {
   id: string;
   name: string;
+  avatar?: string;
   email: string;
-  phone: string;
+  phone?: string;
   birthdate: number;
   gender: string;
-  address: string;
+  address?: string;
+  courses?: string[];
+  classes?: string[];
+  createdAt?: Date;
+  updatedAt?: Date;
 };
 
 export type StudentState = {

@@ -1,6 +1,7 @@
 'use client';
 
 import { MoreHorizontal, Plus, Search } from 'lucide-react';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useShallow } from 'zustand/shallow';
 
@@ -143,7 +144,11 @@ export default function StudentSection() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>View details</DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Link href={`/students/${student.id}`}>
+                            View student
+                          </Link>
+                        </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => setStudentEditor(student)}
                         >

@@ -4,7 +4,7 @@ import { devtools } from 'zustand/middleware';
 import {
   createStudent,
   deleteStudent,
-  getStudent,
+  getFilterStudents,
   getStudents,
   updateStudent,
 } from './api';
@@ -32,7 +32,8 @@ export const useStudentStore = create<StudentState & StudentActions>()(
     },
     getStudent: async (id) => {
       set(() => ({ handling: true }), false, { type: 'students/getStudent' });
-      const student = await getStudent(id);
+      const result = await getFilterStudents({ id });
+      const student = result[0];
       if (student) {
         set(
           (s) => ({
