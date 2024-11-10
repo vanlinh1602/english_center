@@ -1,21 +1,103 @@
-import { BookOpen, Calendar, Users } from 'lucide-react';
+'use client';
 
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { BookOpen, CalendarIcon, Clock, Users } from 'lucide-react';
+import moment from 'moment';
+import { useEffect, useMemo, useState } from 'react';
+import { useShallow } from 'zustand/shallow';
+
+import { Calendar } from '@/components/ui/calendar';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useClassroomStore } from '@/features/classroom/hooks';
+import { useCourseStore } from '@/features/courses/hooks';
+import { useStudentStore } from '@/features/students/hooks';
+import { useTeacherStore } from '@/features/teachers/hooks';
 
 export default function Home() {
-  const stats = [
-    { title: 'Total Students', value: '1,234', icon: Users },
-    { title: 'Active Courses', value: '56', icon: BookOpen },
-    { title: 'Teachers', value: '38', icon: Users },
-    { title: 'Upcoming Classes', value: '12', icon: Calendar },
-  ];
+  const { courses, getCourses } = useCourseStore(
+    useShallow((state) => ({
+      courses: state.courses,
+      getCourses: state.getCourses,
+    }))
+  );
+
+  const { classes, getClasses } = useClassroomStore(
+    useShallow((state) => ({
+      classes: state.classes,
+      getClasses: state.getClasses,
+    }))
+  );
+
+  const { teachers, getTeachers } = useTeacherStore(
+    useShallow((state) => ({
+      teachers: state.teachers,
+      getTeachers: state.getTeachers,
+    }))
+  );
+
+  const { students, getStudents } = useStudentStore(
+    useShallow((state) => ({
+      students: state.students,
+      getStudents: state.getStudents,
+    }))
+  );
+
+  useEffect(() => {
+    getCourses();
+    getClasses();
+    getTeachers();
+    getStudents();
+  }, []);
+
+  const stats = useMemo(() => {
+    return [
+      {
+        title: 'Total Students',
+        value: Object.keys(students || {}).length,
+        icon: Users,
+      },
+      {
+        title: 'Active Courses',
+        value: Object.values(courses || {}).filter((c) => c.status === 'active')
+          .length,
+        icon: BookOpen,
+      },
+      {
+        title: 'Teachers',
+        value: Object.keys(teachers || {}).length,
+        icon: Users,
+      },
+      {
+        title: 'All Classes',
+        value: Object.keys(classes).length,
+        icon: CalendarIcon,
+      },
+    ];
+  }, [courses, classes, teachers, students]);
+
+  const [date, setDate] = useState<Date | undefined>(new Date());
+
+  const upcomingClasses = useMemo(() => {
+    const dateMoment = moment(date?.valueOf());
+    const filteredClasses = Object.values(classes || {}).filter((cls) => {
+      if (
+        (cls?.schedule?.start || 0) > dateMoment.valueOf() &&
+        (cls?.schedule?.end || 0) < dateMoment.valueOf()
+      ) {
+        return false;
+      }
+      if (
+        !cls.schedule.daysInWeek?.includes(
+          dateMoment.format('dddd').toLocaleLowerCase()
+        )
+      ) {
+        return false;
+      }
+      return true;
+    });
+    return filteredClasses;
+  }, [classes, date]);
+
+  console.log(moment().format('dddd'));
 
   return (
     <div className="container mx-auto px-6 py-8">
@@ -35,38 +117,53 @@ export default function Home() {
         ))}
       </div>
 
-      <div className="grid gap-6 mb-8 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activities</CardTitle>
-            <CardDescription>You have 3 new notifications</CardDescription>
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card className="col-span-1">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Calendar</CardTitle>
           </CardHeader>
-          <CardContent>
-            <ul className="space-y-4">
-              <li className="flex items-center">
-                <span className="w-2 h-2 bg-blue-600 rounded-full mr-2"></span>
-                <span>New student enrolled in Advanced English</span>
-              </li>
-              <li className="flex items-center">
-                <span className="w-2 h-2 bg-green-600 rounded-full mr-2"></span>
-                <span>IELTS Preparation course starts tomorrow</span>
-              </li>
-              <li className="flex items-center">
-                <span className="w-2 h-2 bg-yellow-600 rounded-full mr-2"></span>
-                <span>Teacher meeting scheduled for Friday</span>
-              </li>
-            </ul>
+          <CardContent className="flex justify-center">
+            <Calendar
+              mode="single"
+              selected={date}
+              onSelect={setDate}
+              className="rounded-md border"
+            />
           </CardContent>
         </Card>
-        <Card>
+        <Card className="col-span-2">
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Frequently used actions</CardDescription>
+            <CardTitle>Upcoming Classes</CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-col space-y-2">
-            <Button>Add New Student</Button>
-            <Button variant="outline">Create Course</Button>
-            <Button variant="outline">Schedule Class</Button>
+          <CardContent>
+            <div className="space-y-8">
+              {upcomingClasses.map((cls) => (
+                <div key={cls.id} className="flex items-center">
+                  <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <div className="ml-4">
+                    <p className="text-sm font-medium leading-none">
+                      {cls.name}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {courses[cls.course]?.name}
+                    </p>
+                    <div className="flex items-center">
+                      <Users className="mr-2 h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">
+                        {cls.teachers.map((t) => teachers[t]?.name).join(', ')}
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">
+                        {cls.schedule.hoursInDay?.start} to{' '}
+                        {cls.schedule.hoursInDay?.end}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div>

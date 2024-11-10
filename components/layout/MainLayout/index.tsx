@@ -38,7 +38,7 @@ export const MainLayout = ({ children }: Props) => {
         <nav className="flex-grow">
           {[
             'Dashboard',
-            'Schedule',
+            // 'Schedule',
             'Courses',
             'Classrooms',
             'Students',
