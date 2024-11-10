@@ -14,3 +14,13 @@ export const classStatuses: CustomObject<string> = {
   upComming: 'Up Comming',
   inactive: 'Inactive',
 };
+
+export const classDays: CustomObject<string> = {
+  monday: 'Monday',
+  tuesday: 'Tuesday',
+  wednesday: 'Wednesday',
+  thursday: 'Thursday',
+  friday: 'Friday',
+  saturday: 'Saturday',
+  sunday: 'Sunday',
+};

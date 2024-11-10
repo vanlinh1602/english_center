@@ -5,8 +5,8 @@ import { devtools } from 'zustand/middleware';
 import {
   createClassroom,
   deleteClassroom,
-  getClassroom,
   getClassroomes,
+  getFilterClassroom,
   updateClassroom,
 } from './api';
 import { ClassroomActions, ClassroomState } from './types';
@@ -33,7 +33,8 @@ export const useClassroomStore = create<ClassroomState & ClassroomActions>()(
     },
     getClass: async (id) => {
       set(() => ({ handling: true }), false, { type: 'classes/getClass' });
-      const classroom = await getClassroom(id);
+      const result = await getFilterClassroom({ id });
+      const classroom = result[0];
       if (classroom) {
         set(
           (s) => ({
@@ -110,6 +111,30 @@ export const useClassroomStore = create<ClassroomState & ClassroomActions>()(
           type: 'classes/deleteClass',
         });
       }
+    },
+    getFilterClass: async (filter) => {
+      set(() => ({ handling: true }), false, {
+        type: 'classes/getFilterClass',
+      });
+      const classes = await getFilterClassroom(filter);
+      const classesMap = classes.reduce((acc, classroom) => {
+        acc[classroom.id] = classroom;
+        return acc;
+      }, {} as ClassroomState['classes']);
+
+      set(
+        (s) => ({
+          classes: {
+            ...s.classes,
+            ...classesMap,
+          },
+          handling: false,
+        }),
+        false,
+        {
+          type: 'classes/getFilterClass',
+        }
+      );
     },
   }))
 );

@@ -173,5 +173,26 @@ export const useCourseStore = create<CoursesState & CoursesActions>()(
         { type: 'courses/updateSyllabus' }
       );
     },
+    deleteSyllabus: async (courseId) => {
+      set(() => ({ handling: true }), false, {
+        type: 'courses/deleteSyllabus',
+      });
+      const success = await updateSyllabus(courseId, {} as any);
+      if (!success) {
+        set(() => ({ handling: false }), false, {
+          type: 'courses/deleteSyllabus',
+        });
+        return;
+      }
+      set(
+        (s) => {
+          const newSyllabus = { ...s.syllabus };
+          delete newSyllabus[courseId];
+          return { syllabus: newSyllabus, handling: false };
+        },
+        false,
+        { type: 'courses/deleteSyllabus' }
+      );
+    },
   }))
 );

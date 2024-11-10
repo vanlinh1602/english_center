@@ -13,6 +13,7 @@ export type Courses = {
 export type CourseSyllabus = {
   course: string;
   styllabus: {
+    id: string;
     week: number;
     description: string;
   }[];
@@ -36,4 +37,5 @@ export type CoursesActions = {
   createSyllabus: (syllabus: Partial<CourseSyllabus>) => void;
   getSyllabus: (courseId: string) => void;
   updateSyllabus: (courseId: string, syllabus: Partial<CourseSyllabus>) => void;
+  deleteSyllabus: (courseId: string) => void;
 };

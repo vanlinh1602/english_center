@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import MultipleSelector from '@/components/ui/multi-select';
 import {
   Popover,
   PopoverContent,
@@ -29,8 +30,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useCourseStore } from '@/features/courses/hooks';
+import { useTeacherStore } from '@/features/teachers/hooks';
 import { toast } from '@/hooks/use-toast';
-import { classStatuses } from '@/lib/options';
+import { classDays, classStatuses } from '@/lib/options';
 import { cn } from '@/lib/utils';
 
 import { Classroom } from '../../types';
@@ -47,32 +49,49 @@ const ClassroomEditor = ({ classroom, onCancel, onSave }: Props) => {
       courses: state.courses,
     }))
   );
+  const { teachers } = useTeacherStore(
+    useShallow((state) => ({
+      teachers: state.teachers,
+    }))
+  );
 
   const [edit, setEdit] = useState<Partial<Classroom>>(classroom || {});
   const [date, setDate] = useState<DateRange | undefined>({
-    from: classroom?.dateStart ? new Date(classroom.dateStart) : new Date(),
-    to: classroom?.dateEnd ? new Date(classroom.dateEnd) : undefined,
+    from: classroom?.schedule?.start
+      ? new Date(classroom.schedule.start)
+      : new Date(),
+    to: classroom?.schedule?.end ? new Date(classroom.schedule.end) : undefined,
   });
 
   const handleSave = () => {
-    if (!edit?.name || !edit?.course || !edit?.teacher) {
+    if (
+      ['name', 'course', 'teachers', 'room', 'maxStudents', 'status'].some(
+        (key) => !edit[key as keyof Classroom]
+      )
+    ) {
       toast({
         title: 'Error',
-        description: 'Name, course, teacher, and schedule are required',
+        description: 'Please fill all required fields',
         variant: 'destructive',
       });
       return;
     }
     const classUpdate: Omit<Classroom, 'id'> = {
-      name: edit.name,
-      course: edit.course,
-      teacher: edit.teacher,
-      students: [],
-      daysInWeek: [],
-      hoursInDay: '',
-      dateStart: date?.from?.getTime() || Date.now(),
-      dateEnd: date?.to?.getTime() || Date.now(),
+      name: edit.name!,
+      course: edit.course!,
+      room: edit.room || '',
+      teachers: edit.teachers || [],
       status: edit.status || 'active',
+      maxStudents: edit.maxStudents || 0,
+      schedule: {
+        daysInWeek: edit.schedule?.daysInWeek || [],
+        hoursInDay: {
+          start: edit.schedule?.hoursInDay?.start || '00:00',
+          end: edit.schedule?.hoursInDay?.end || '00:00',
+        },
+        start: date?.from?.getTime() || Date.now(),
+        end: date?.to?.getTime() || Date.now(),
+      },
     };
     onSave(classUpdate, classroom?.id);
   };
@@ -99,6 +118,7 @@ const ClassroomEditor = ({ classroom, onCancel, onSave }: Props) => {
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="name" className="text-right">
               Name
+              <span className="text-red-600">*</span>
             </Label>
             <Input
               id="name"
@@ -110,8 +130,10 @@ const ClassroomEditor = ({ classroom, onCancel, onSave }: Props) => {
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="course" className="text-right">
               Course
+              <span className="text-red-600">*</span>
             </Label>
             <Select
+              value={edit.course}
               onValueChange={(value) => setEdit({ ...edit, course: value })}
             >
               <SelectTrigger className="col-span-3">
@@ -128,12 +150,55 @@ const ClassroomEditor = ({ classroom, onCancel, onSave }: Props) => {
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="teacher" className="text-right">
-              Teacher
+              Teachers
+              <span className="text-red-600">*</span>
+            </Label>
+            <div className="col-span-3">
+              <MultipleSelector
+                className="w-full"
+                onChange={(value) =>
+                  setEdit((pre) => ({
+                    ...pre,
+                    teachers: value.map((v) => v.value),
+                  }))
+                }
+                value={edit.teachers?.map((tId) => ({
+                  label: teachers[tId]?.name,
+                  value: tId,
+                }))}
+                placeholder="Select teachers"
+                options={Object.entries(teachers).map(([id, teacher]) => ({
+                  id,
+                  label: teacher.name,
+                  value: id,
+                }))}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="room" className="text-right">
+              Room
+              <span className="text-red-600">*</span>
             </Label>
             <Input
-              id="teacher"
-              value={edit.teacher?.[0]}
-              onChange={(e) => setEdit({ ...edit, teacher: [e.target.value] })}
+              id="room"
+              value={edit.room}
+              onChange={(e) => setEdit({ ...edit, room: e.target.value })}
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="max-students" className="text-right">
+              Max Students
+              <span className="text-red-600">*</span>
+            </Label>
+            <Input
+              id="max-students"
+              type="number"
+              value={edit.maxStudents}
+              onChange={(e) =>
+                setEdit({ ...edit, maxStudents: Number(e.target.value) })
+              }
               className="col-span-3"
             />
           </div>
@@ -179,13 +244,86 @@ const ClassroomEditor = ({ classroom, onCancel, onSave }: Props) => {
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="course" className="text-right">
+              Days in Week
+            </Label>
+            <div className="col-span-3">
+              <MultipleSelector
+                className="w-full"
+                onChange={(value) =>
+                  setEdit((pre) => ({
+                    ...pre,
+                    schedule: {
+                      ...pre.schedule,
+                      daysInWeek: value.map((v) => v.value),
+                    },
+                  }))
+                }
+                value={edit.schedule?.daysInWeek?.map((day) => ({
+                  label: classDays[day],
+                  value: day,
+                }))}
+                placeholder="Select days"
+                options={Object.entries(classDays).map(([id, day]) => ({
+                  id,
+                  label: day,
+                  value: id,
+                }))}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="course" className="text-right">
+              Hour In Day
+            </Label>
+            <div className="flex col-span-3 space-x-2 items-center">
+              <Input
+                id="start"
+                type="time"
+                value={edit.schedule?.hoursInDay?.start}
+                onChange={(e) =>
+                  setEdit((pre) => ({
+                    ...pre,
+                    schedule: {
+                      ...pre.schedule,
+                      hoursInDay: {
+                        ...pre.schedule?.hoursInDay,
+                        start: e.target.value,
+                      },
+                    },
+                  }))
+                }
+              />
+              <div>to</div>
+              <Input
+                id="end"
+                type="time"
+                value={edit.schedule?.hoursInDay?.end}
+                onChange={(e) =>
+                  setEdit((pre) => ({
+                    ...pre,
+                    schedule: {
+                      ...pre.schedule,
+                      hoursInDay: {
+                        ...pre.schedule?.hoursInDay,
+                        end: e.target.value,
+                      },
+                    },
+                  }))
+                }
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="course" className="text-right">
               Status
+              <span className="text-red-600">*</span>
             </Label>
             <Select
+              value={edit.status}
               onValueChange={(value) => setEdit({ ...edit, status: value })}
             >
               <SelectTrigger className="col-span-3">
-                <SelectValue placeholder="Select a course" />
+                <SelectValue placeholder="Select a status" />
               </SelectTrigger>
               <SelectContent>
                 {Object.entries(classStatuses).map(([id, status]) => (

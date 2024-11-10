@@ -6,7 +6,7 @@ import { Classroom } from './types';
 
 export const getClassroomes = async (): Promise<Classroom[]> => {
   try {
-    const result = await classroomsService.get<Classroom[]>('/get/all');
+    const result = await classroomsService.get<Classroom[]>('/get');
     if (result.kind === 'ok') {
       return result.data;
     }
@@ -21,9 +21,11 @@ export const getClassroomes = async (): Promise<Classroom[]> => {
   }
 };
 
-export const getClassroom = async (id: string): Promise<Classroom | null> => {
+export const getFilterClassroom = async (
+  filter: Partial<Classroom>
+): Promise<Classroom[]> => {
   try {
-    const result = await classroomsService.get<Classroom>(`/get/${id}`);
+    const result = await classroomsService.get<Classroom[]>('/get', filter);
     if (result.kind === 'ok') {
       return result.data;
     }
@@ -34,7 +36,7 @@ export const getClassroom = async (id: string): Promise<Classroom | null> => {
       description: formatError(error),
       variant: 'destructive',
     });
-    return null;
+    return [];
   }
 };
 

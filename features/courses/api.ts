@@ -148,7 +148,7 @@ export const updateSyllabus = async (
     const result = await coursesService.post<{ success: boolean }>(
       '/syllabus/update',
       {
-        courseId,
+        course: courseId,
         syllabus,
       }
     );

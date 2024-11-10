@@ -3,15 +3,22 @@ export type Classroom = {
   name: string;
   course: string;
   room: string;
-  teacher: string[];
-  students: string[];
+  teachers: string[];
   maxStudents: number;
-  daysInWeek: string[];
-  hoursInDay: string;
-  dateStart: number;
-  dateEnd: number;
   status: string;
+  schedule: {
+    start?: number;
+    end?: number;
+    daysInWeek?: string[];
+    hoursInDay?: {
+      start?: string;
+      end?: string;
+    };
+  };
+  students?: string[];
   completedSyallbus?: Record<string, boolean>;
+  createdAt?: Date;
+  updatedAt?: Date;
 };
 
 export type ClassroomState = {
@@ -22,6 +29,7 @@ export type ClassroomState = {
 export type ClassroomActions = {
   getClasses: () => void;
   getClass: (id: string) => void;
+  getFilterClass: (filter: Partial<Classroom>) => void;
   createClass: (classroom: Partial<Classroom>) => void;
   updateClass: (id: string, classroom: Partial<Classroom>) => void;
   deleteClass: (id: string) => void;

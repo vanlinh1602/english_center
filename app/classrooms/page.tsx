@@ -38,6 +38,7 @@ import { ClassroomEditor } from '@/features/classroom/components';
 import { useClassroomStore } from '@/features/classroom/hooks';
 import { Classroom } from '@/features/classroom/types';
 import { useCourseStore } from '@/features/courses/hooks';
+import { useTeacherStore } from '@/features/teachers/hooks';
 import { classStatuses } from '@/lib/options';
 
 export default function ClassSection() {
@@ -66,12 +67,22 @@ export default function ClassSection() {
     }))
   );
 
+  const { teachers, getTeachers } = useTeacherStore(
+    useShallow((state) => ({
+      teachers: state.teachers,
+      getTeachers: state.getTeachers,
+    }))
+  );
+
   useEffect(() => {
     if (!Object.keys(courses).length) {
       getCourses();
     }
     if (!Object.keys(classes).length) {
       getClasses();
+    }
+    if (!Object.keys(teachers).length) {
+      getTeachers();
     }
   }, []);
 
@@ -146,30 +157,32 @@ export default function ClassSection() {
                     <div className="flex items-center">
                       <Avatar className="h-8 w-8 mr-2">
                         <AvatarImage
-                          src={`https://api.dicebear.com/6.x/initials/svg?seed=${cls.teacher}`}
+                          src={`https://api.dicebear.com/6.x/initials/svg?seed=${
+                            teachers[cls.teachers?.[0]]?.name
+                          }`}
                         />
                         <AvatarFallback>
-                          {cls.teacher?.[0]
+                          {teachers[cls.teachers?.[0]]?.name
                             .split(' ')
                             .map((n) => n[0])
                             .join('')}
                         </AvatarFallback>
                       </Avatar>
-                      {cls.teacher?.[0]}
+                      {teachers[cls.teachers?.[0]]?.name}
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center">
                       <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                      {moment(cls.dateStart).format('DD/MM/YYYY')}
+                      {moment(cls.schedule.start).format('DD/MM/YYYY')}
                       {' - '}
-                      {moment(cls.dateEnd).format('DD/MM/YYYY')}
+                      {moment(cls.schedule.end).format('DD/MM/YYYY')}
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center">
                       <Users className="mr-2 h-4 w-4 text-muted-foreground" />
-                      {cls.students?.length}
+                      {cls.students?.length || 0}
                     </div>
                   </TableCell>
                   <TableCell>
