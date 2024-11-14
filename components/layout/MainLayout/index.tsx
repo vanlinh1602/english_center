@@ -1,5 +1,6 @@
 'use client';
 
+import _ from 'lodash';
 import {
   Bell,
   BookOpen,
@@ -7,10 +8,12 @@ import {
   Layout,
   LogOut,
   Settings,
+  UserRoundCog,
   Users,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useMemo } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -26,7 +29,24 @@ type Props = {
 };
 
 export const MainLayout = ({ children }: Props) => {
-  const [activeTab, setActiveTab] = useState('Dashboard');
+  const pathName = usePathname();
+  const router = useRouter();
+
+  const activeTab = useMemo(() => {
+    const tab = pathName.split('/')[1];
+    return tab === '' ? 'dashboard' : tab;
+  }, [pathName]);
+
+  useEffect(() => {
+    if (activeTab === 'acx') {
+      router.replace('/login');
+    }
+  }, [activeTab]);
+
+  if (activeTab === 'login') {
+    return <>{children}</>;
+  }
+
   return (
     <div className="flex h-screen bg-gray-100">
       <aside className="hidden md:flex flex-col w-64 bg-white border-r">
@@ -37,32 +57,33 @@ export const MainLayout = ({ children }: Props) => {
         </div>
         <nav className="flex-grow">
           {[
-            'Dashboard',
+            'dashboard',
             // 'Schedule',
-            'Courses',
-            'Classrooms',
-            'Students',
-            'Teachers',
-            'Reports',
+            'courses',
+            'classrooms',
+            'students',
+            'teachers',
+            'reports',
+            'staffs',
             // 'Revenue',
           ].map((item) => (
             <Link
-              href={item === 'Dashboard' ? '/' : `/${item.toLowerCase()}`}
+              href={item === 'dashboard' ? '/' : `/${item.toLowerCase()}`}
               key={item}
               className={`flex items-center px-6 py-3 text-gray-700 w-full ${
                 activeTab === item ? 'bg-blue-50 text-blue-600' : ''
               }`}
-              onClick={() => setActiveTab(item)}
             >
-              {item === 'Dashboard' && <Layout className="mr-3 h-5 w-5" />}
-              {item === 'Students' && <Users className="mr-3 h-5 w-5" />}
-              {item === 'Courses' && <BookOpen className="mr-3 h-5 w-5" />}
-              {item === 'Teachers' && <Users className="mr-3 h-5 w-5" />}
-              {item === 'Schedule' && <Calendar className="mr-3 h-5 w-5" />}
-              {item === 'Reports' && <Layout className="mr-3 h-5 w-5" />}
-              {item === 'Classrooms' && <Layout className="mr-3 h-5 w-5" />}
-              {item === 'Revenue' && <Layout className="mr-3 h-5 w-5" />}
-              {item}
+              {item === 'dashboard' && <Layout className="mr-3 h-5 w-5" />}
+              {item === 'students' && <Users className="mr-3 h-5 w-5" />}
+              {item === 'courses' && <BookOpen className="mr-3 h-5 w-5" />}
+              {item === 'teachers' && <Users className="mr-3 h-5 w-5" />}
+              {item === 'schedule' && <Calendar className="mr-3 h-5 w-5" />}
+              {item === 'reports' && <Layout className="mr-3 h-5 w-5" />}
+              {item === 'classrooms' && <Layout className="mr-3 h-5 w-5" />}
+              {item === 'revenue' && <Layout className="mr-3 h-5 w-5" />}
+              {item === 'staffs' && <UserRoundCog className="mr-3 h-5 w-5" />}
+              {_.upperFirst(item)}
             </Link>
           ))}
         </nav>
@@ -72,7 +93,7 @@ export const MainLayout = ({ children }: Props) => {
         <header className="flex items-center justify-between px-6 py-4 bg-white border-b h-16">
           <div className="flex items-center">
             <h1 className="text-2xl font-semibold text-gray-800">
-              {activeTab}
+              {_.upperFirst(activeTab || '')}
             </h1>
           </div>
           <div className="flex items-center">

@@ -1,6 +1,6 @@
 'use client';
 
-import { BookOpen, CalendarIcon, Clock, Users } from 'lucide-react';
+import { CalendarIcon, Clock, Users } from 'lucide-react';
 import moment from 'moment';
 import { useEffect, useMemo, useState } from 'react';
 import { useShallow } from 'zustand/shallow';
@@ -34,7 +34,7 @@ export default function Home() {
     }))
   );
 
-  const { students, getStudents } = useStudentStore(
+  const { getStudents } = useStudentStore(
     useShallow((state) => ({
       students: state.students,
       getStudents: state.getStudents,
@@ -48,31 +48,31 @@ export default function Home() {
     getStudents();
   }, []);
 
-  const stats = useMemo(() => {
-    return [
-      {
-        title: 'Total Students',
-        value: Object.keys(students || {}).length,
-        icon: Users,
-      },
-      {
-        title: 'Active Courses',
-        value: Object.values(courses || {}).filter((c) => c.status === 'active')
-          .length,
-        icon: BookOpen,
-      },
-      {
-        title: 'Teachers',
-        value: Object.keys(teachers || {}).length,
-        icon: Users,
-      },
-      {
-        title: 'All Classes',
-        value: Object.keys(classes).length,
-        icon: CalendarIcon,
-      },
-    ];
-  }, [courses, classes, teachers, students]);
+  // const stats = useMemo(() => {
+  //   return [
+  //     {
+  //       title: 'Total Students',
+  //       value: Object.keys(students || {}).length,
+  //       icon: Users,
+  //     },
+  //     {
+  //       title: 'Active Courses',
+  //       value: Object.values(courses || {}).filter((c) => c.status === 'active')
+  //         .length,
+  //       icon: BookOpen,
+  //     },
+  //     {
+  //       title: 'Teachers',
+  //       value: Object.keys(teachers || {}).length,
+  //       icon: Users,
+  //     },
+  //     {
+  //       title: 'All Classes',
+  //       value: Object.keys(classes).length,
+  //       icon: CalendarIcon,
+  //     },
+  //   ];
+  // }, [courses, classes, teachers, students]);
 
   const [date, setDate] = useState<Date | undefined>(new Date());
 
@@ -101,7 +101,7 @@ export default function Home() {
 
   return (
     <div className="container mx-auto px-6 py-8">
-      <div className="grid gap-6 mb-8 md:grid-cols-2 xl:grid-cols-4">
+      {/* <div className="grid gap-6 mb-8 md:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat, index) => (
           <Card key={index}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -115,7 +115,7 @@ export default function Home() {
             </CardContent>
           </Card>
         ))}
-      </div>
+      </div> */}
 
       <div className="grid gap-6 md:grid-cols-3">
         <Card className="col-span-1">

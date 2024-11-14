@@ -1,23 +1,8 @@
 'use client';
 
-import {
-  ArrowDown,
-  ArrowUp,
-  BookOpen,
-  DollarSign,
-  GraduationCap,
-  Users,
-} from 'lucide-react';
-import { useState } from 'react';
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
+import { BookOpen, DollarSign, Users } from 'lucide-react';
+import { useEffect, useMemo } from 'react';
+import { useShallow } from 'zustand/shallow';
 
 import {
   Card,
@@ -26,82 +11,97 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useClassroomStore } from '@/features/classroom/hooks';
+import { useCourseStore } from '@/features/courses/hooks';
+import { useStudentStore } from '@/features/students/hooks';
+import { courseStatuses } from '@/lib/options';
+import { format } from '@/utils/number';
 
 export default function ReportSection() {
-  const [timeRange, setTimeRange] = useState('This Month');
+  const { students, getStudents } = useStudentStore(
+    useShallow((state) => ({
+      students: state.students,
+      getStudents: state.getStudents,
+    }))
+  );
 
-  const summaryData = [
-    {
-      title: 'Total Students',
-      icon: Users,
-      value: '2,345',
-      change: '+5.2%',
-      trend: 'up',
-    },
-    {
-      title: 'Total Courses',
-      icon: BookOpen,
-      value: '48',
-      change: '+2.1%',
-      trend: 'up',
-    },
-    {
-      title: 'Graduation Rate',
-      icon: GraduationCap,
-      value: '94.2%',
-      change: '+1.2%',
-      trend: 'up',
-    },
-    {
+  const { courses, getCourses } = useCourseStore(
+    useShallow((state) => ({
+      courses: state.courses,
+      getCourses: state.getCourses,
+    }))
+  );
+
+  const { classrooms, getClassrooms } = useClassroomStore(
+    useShallow((state) => ({
+      classrooms: state.classes,
+      getClassrooms: state.getClasses,
+    }))
+  );
+
+  useEffect(() => {
+    if (!Object.keys(students).length) {
+      getStudents();
+    }
+    if (!Object.keys(courses).length) {
+      getCourses();
+    }
+    if (!Object.keys(classrooms).length) {
+      getClassrooms();
+    }
+  }, []);
+
+  const { summaryData, courseStudents } = useMemo(() => {
+    const tmp: {
+      title: string;
+      icon: any;
+      value: string | number;
+    }[] = [
+      {
+        title: 'Total Students',
+        icon: Users,
+        value: format(Object.keys(students).length),
+      },
+      {
+        title: 'Total Courses',
+        icon: BookOpen,
+        value: Object.keys(courses).length,
+      },
+      {
+        title: 'Total Classrooms',
+        icon: DollarSign,
+        value: Object.keys(classrooms).length,
+      },
+    ];
+    const totalStudents: CustomObject<number> = {};
+    let totalRevenue = 0;
+    Object.values(classrooms).forEach((cls) => {
+      if (!totalStudents[cls.course]) {
+        totalStudents[cls.course] = 0;
+      }
+      totalStudents[cls.course] += cls.students?.length || 0;
+      totalRevenue +=
+        (cls.students?.length || 0) * (courses[cls.course]?.price || 1);
+    });
+
+    tmp.push({
       title: 'Revenue',
       icon: DollarSign,
-      value: '$234,500',
-      change: '-2.5%',
-      trend: 'down',
-    },
-  ];
+      value: `$${format(totalRevenue)}`,
+    });
 
-  const enrollmentData = [
-    { name: 'Jan', students: 150 },
-    { name: 'Feb', students: 180 },
-    { name: 'Mar', students: 220 },
-    { name: 'Apr', students: 240 },
-    { name: 'May', students: 280 },
-    { name: 'Jun', students: 310 },
-  ];
-
-  const coursePerformanceData = [
-    { name: 'Advanced English', rating: 4.8, students: 120 },
-    { name: 'IELTS Preparation', rating: 4.6, students: 95 },
-    { name: 'Business English', rating: 4.7, students: 85 },
-    { name: 'Beginner English', rating: 4.5, students: 150 },
-    { name: 'Conversational English', rating: 4.9, students: 70 },
-  ];
+    return {
+      summaryData: tmp,
+      courseStudents: totalStudents,
+    };
+  }, [students, courses]);
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-8 flex justify-between items-center">
+      {/* <div className="mb-8 flex justify-between items-center">
         <h2 className="text-3xl font-bold">Reports & Analytics</h2>
-        <Select value={timeRange} onValueChange={setTimeRange}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select time range" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="This Week">This Week</SelectItem>
-            <SelectItem value="This Month">This Month</SelectItem>
-            <SelectItem value="This Quarter">This Quarter</SelectItem>
-            <SelectItem value="This Year">This Year</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      </div> */}
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
         {summaryData.map((item, index) => (
@@ -114,51 +114,18 @@ export default function ReportSection() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{item.value}</div>
-              <p
-                className={`text-xs ${
-                  item.trend === 'up' ? 'text-green-600' : 'text-red-600'
-                }`}
-              >
-                {item.trend === 'up' ? (
-                  <ArrowUp className="inline mr-1 h-4 w-4" />
-                ) : (
-                  <ArrowDown className="inline mr-1 h-4 w-4" />
-                )}
-                {item.change}
-              </p>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <Tabs defaultValue="enrollment" className="space-y-4">
+      <Tabs defaultValue="coursePerformance" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="enrollment">Enrollment Trends</TabsTrigger>
           <TabsTrigger value="coursePerformance">
             Course Performance
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="enrollment" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Student Enrollment Trends</CardTitle>
-              <CardDescription>
-                Number of new students enrolled per month
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="h-[400px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={enrollmentData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="students" fill="#3b82f6" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
+
         <TabsContent value="coursePerformance" className="space-y-4">
           <Card>
             <CardHeader>
@@ -169,29 +136,40 @@ export default function ReportSection() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {coursePerformanceData.map((course, index) => (
-                  <div key={index} className="flex items-center">
-                    <div className="w-[200px]">
-                      <p className="text-sm font-medium">{course.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Rating: {course.rating}
-                      </p>
-                    </div>
-                    <div className="flex-1">
-                      <div className="h-2 bg-blue-100 rounded">
-                        <div
-                          className="h-2 bg-blue-500 rounded"
-                          style={{ width: `${(course.students / 150) * 100}%` }}
-                        ></div>
+                {Object.entries(courseStudents).map(
+                  ([courseId, numberStudent]) => {
+                    const course = courses[courseId] || {};
+                    return (
+                      <div key={courseId} className="flex items-center">
+                        <div className="w-[200px]">
+                          <p className="text-sm font-medium">{course.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Status: {courseStatuses[course.status]}
+                          </p>
+                        </div>
+                        <div className="flex-1">
+                          <div className="h-2 bg-blue-100 rounded">
+                            <div
+                              className="h-2 bg-blue-500 rounded"
+                              style={{
+                                width: `${
+                                  (numberStudent /
+                                    Object.keys(students || {}).length) *
+                                  100
+                                }%`,
+                              }}
+                            ></div>
+                          </div>
+                        </div>
+                        <div className="w-[100px] text-right">
+                          <p className="text-sm font-medium">
+                            {numberStudent} students
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="w-[100px] text-right">
-                      <p className="text-sm font-medium">
-                        {course.students} students
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                    );
+                  }
+                )}
               </div>
             </CardContent>
           </Card>

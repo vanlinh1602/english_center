@@ -8,7 +8,7 @@ export type Student = {
   gender: string;
   address?: string;
   courses?: string[];
-  classes?: string[];
+  // classes?: string[];
   createdAt?: Date;
   updatedAt?: Date;
 };
