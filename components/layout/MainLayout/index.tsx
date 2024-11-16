@@ -1,5 +1,6 @@
 'use client';
 
+import { onAuthStateChanged } from 'firebase/auth';
 import _ from 'lodash';
 import {
   Bell,
@@ -7,13 +8,13 @@ import {
   Calendar,
   Layout,
   LogOut,
-  Settings,
   UserRoundCog,
   Users,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useMemo } from 'react';
+import { useShallow } from 'zustand/shallow';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useUserStore } from '@/features/user/hooks';
+import { auth } from '@/lib/firebase';
 
 type Props = {
   children: React.ReactNode;
@@ -32,15 +35,27 @@ export const MainLayout = ({ children }: Props) => {
   const pathName = usePathname();
   const router = useRouter();
 
+  const { user, login } = useUserStore(
+    useShallow((state) => ({
+      user: state.user,
+      login: state.login,
+    }))
+  );
+
   const activeTab = useMemo(() => {
     const tab = pathName.split('/')[1];
     return tab === '' ? 'dashboard' : tab;
   }, [pathName]);
 
   useEffect(() => {
-    if (activeTab === 'acx') {
+    if (!user && activeTab !== 'login') {
       router.replace('/login');
     }
+    return onAuthStateChanged(auth, (userData) => {
+      if (userData) {
+        login();
+      }
+    });
   }, [activeTab]);
 
   if (activeTab === 'login') {
@@ -116,14 +131,14 @@ export const MainLayout = ({ children }: Props) => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/profile')}>
                   <Users className="mr-2 h-4 w-4" />
                   <span>Profile</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                {/* <DropdownMenuItem>
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Settings</span>
-                </DropdownMenuItem>
+                </DropdownMenuItem> */}
                 <DropdownMenuItem>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>

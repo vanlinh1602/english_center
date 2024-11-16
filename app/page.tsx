@@ -97,8 +97,6 @@ export default function Home() {
     return filteredClasses;
   }, [classes, date]);
 
-  console.log(moment().format('dddd'));
-
   return (
     <div className="container mx-auto px-6 py-8">
       {/* <div className="grid gap-6 mb-8 md:grid-cols-2 xl:grid-cols-4">

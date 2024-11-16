@@ -63,18 +63,21 @@ export default function StudentInfo() {
   const student = useMemo(() => students[id], [students, id]);
 
   const studentCourses = useMemo(
-    () => student?.courses?.map((courseId) => courses[courseId]),
+    () =>
+      student?.courses?.map((courseId) => courses[courseId]).filter((v) => !!v),
     [student, courses]
   );
+  console.log('studentCourses', courses);
+  console.log('student', student);
 
   const studentClasses = useMemo(
-    () => student?.classes?.map((classId) => classes[classId]),
+    () => Object.values(classes).filter((cls) => cls.students?.includes(id)),
     [student, classes]
   );
 
   const totalAmountPaid = useMemo(() => {
     if (!Object.keys(studentCourses || {}).length) return 0;
-    return studentCourses?.reduce((acc, course) => acc + course.price, 0);
+    return studentCourses?.reduce((acc, course) => acc + course?.price, 0);
   }, [studentCourses]);
 
   useEffect(() => {
@@ -144,15 +147,15 @@ export default function StudentInfo() {
             <div className="grid gap-4">
               {studentCourses ? (
                 studentCourses.map((course) => (
-                  <Card key={course.id}>
+                  <Card key={course?.id}>
                     <CardHeader className="py-4">
                       <div className="flex justify-between items-start">
                         <div>
                           <CardTitle className="text-base">
-                            {course.name}
+                            {course?.name}
                           </CardTitle>
                           <CardDescription>
-                            Level: {course.level}
+                            Level: {course?.level}
                           </CardDescription>
                         </div>
                         <Badge variant="secondary">Complete</Badge>
@@ -179,7 +182,8 @@ export default function StudentInfo() {
                       <CardTitle className="text-base">{cls.name}</CardTitle>
                       <CardDescription>
                         <div>
-                          <span className="ml-2">
+                          Schedule:{' '}
+                          <span>
                             {cls?.schedule?.daysInWeek
                               ?.map((v) => classDays[v])
                               .join(', ') || 'N/A'}

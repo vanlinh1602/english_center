@@ -79,7 +79,6 @@ export default function ScheduleSection() {
 
   const handleAddClass = () => {
     // Here you would typically add the new class to your data store
-    console.log('New class added:', newClass);
     setIsAddClassOpen(false);
     setNewClass({
       title: '',
