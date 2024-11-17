@@ -6,6 +6,8 @@ import { User, UserActions, UserState } from './types';
 
 export const defaultInitState: UserState = {
   handling: false,
+  role: undefined,
+  user: undefined,
 };
 
 export const useUserStore = create<UserState & UserActions>()(

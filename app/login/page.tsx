@@ -1,9 +1,7 @@
 'use client';
 
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { useShallow } from 'zustand/shallow';
+import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -14,27 +12,12 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import Waiting from '@/components/Waiting';
-import { useUserStore } from '@/features/user/hooks';
 import { toast } from '@/hooks/use-toast';
 import { auth } from '@/lib/firebase';
 import formatError from '@/lib/formatError';
 
 export default function Login() {
   const [handling, setHandling] = useState<boolean>();
-
-  const router = useRouter();
-
-  const { userInfo } = useUserStore(
-    useShallow((userState) => ({
-      userInfo: userState.user,
-    }))
-  );
-
-  useEffect(() => {
-    if (userInfo) {
-      router.back();
-    }
-  }, [userInfo]);
 
   const handleSocialLogin = async () => {
     setHandling(true);

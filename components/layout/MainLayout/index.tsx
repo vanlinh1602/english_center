@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useShallow } from 'zustand/shallow';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -33,12 +33,15 @@ type Props = {
 
 export const MainLayout = ({ children }: Props) => {
   const pathName = usePathname();
+  const [currentTab, setCurrentTab] = useState('/');
   const router = useRouter();
 
-  const { user, login } = useUserStore(
+  const { user, role, login, singOut } = useUserStore(
     useShallow((state) => ({
       user: state.user,
+      role: state.role,
       login: state.login,
+      singOut: state.signOut,
     }))
   );
 
@@ -46,10 +49,12 @@ export const MainLayout = ({ children }: Props) => {
     const tab = pathName.split('/')[1];
     return tab === '' ? 'dashboard' : tab;
   }, [pathName]);
+  console.log('currentTab', currentTab);
 
   useEffect(() => {
     if (!user && activeTab !== 'login') {
-      router.replace('/login');
+      router.push('/login');
+      setCurrentTab(pathName);
     }
     return onAuthStateChanged(auth, (userData) => {
       if (userData) {
@@ -57,6 +62,12 @@ export const MainLayout = ({ children }: Props) => {
       }
     });
   }, [activeTab]);
+
+  useEffect(() => {
+    if (user && activeTab === 'login') {
+      router.push(currentTab);
+    }
+  }, [user]);
 
   if (activeTab === 'login') {
     return <>{children}</>;
@@ -79,8 +90,8 @@ export const MainLayout = ({ children }: Props) => {
             'students',
             'teachers',
             'reports',
-            'staffs',
             // 'Revenue',
+            ...(role === 'admin' ? ['staffs'] : []),
           ].map((item) => (
             <Link
               href={item === 'dashboard' ? '/' : `/${item.toLowerCase()}`}
@@ -122,11 +133,13 @@ export const MainLayout = ({ children }: Props) => {
                   className="relative h-8 w-8 rounded-full"
                 >
                   <Avatar className="h-8 w-8">
-                    <AvatarImage
-                      src="https://act-upload.hoyoverse.com/event-ugc-hoyowiki/2024/07/24/15884296/d36e559a0a718d050fc2c911fa3d3365_8529512733030822447.png"
-                      alt="User"
-                    />
-                    <AvatarFallback>AD</AvatarFallback>
+                    <AvatarImage src={user?.avatar} alt="User" />
+                    <AvatarFallback>
+                      {user?.name
+                        .split(' ')
+                        .map((n) => n[0])
+                        .join('')}
+                    </AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
@@ -139,7 +152,12 @@ export const MainLayout = ({ children }: Props) => {
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Settings</span>
                 </DropdownMenuItem> */}
-                <DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={async () => {
+                    await singOut();
+                    router.replace('/login');
+                  }}
+                >
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
                 </DropdownMenuItem>

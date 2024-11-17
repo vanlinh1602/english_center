@@ -21,5 +21,5 @@ export type UserState = {
 export type UserActions = {
   login: () => void;
   updateInfo: (user: Partial<User>) => void;
-  signOut: () => void;
+  signOut: () => Promise<void>;
 };

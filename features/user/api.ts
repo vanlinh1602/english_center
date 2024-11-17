@@ -1,6 +1,7 @@
-import { getAuth } from 'firebase/auth';
+import { getAuth, signOut as logOut } from 'firebase/auth';
 
 import { toast } from '@/hooks/use-toast';
+import { auth } from '@/lib/firebase';
 import formatError from '@/lib/formatError';
 import { usersService } from '@/services';
 
@@ -14,9 +15,9 @@ export const login = async (): Promise<{
     const user = getAuth().currentUser;
     const data: Partial<User> = {
       email: user?.email || '',
-      name: user?.displayName || '',
+      // name: user?.displayName || '',
       avatar: user?.photoURL || '',
-      phone: user?.phoneNumber || '',
+      // phone: user?.phoneNumber || '',
     };
     const token = await user?.getIdToken();
     const result = await usersService.post<{
@@ -67,6 +68,7 @@ export const updateUser = async (
 
 export const signOut = async (): Promise<void> => {
   try {
+    await logOut(auth);
     await usersService.post<{ success: boolean }>('/signOut');
   } catch (error) {
     toast({

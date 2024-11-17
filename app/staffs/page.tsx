@@ -1,6 +1,7 @@
 'use client';
 
 import { Edit, Trash2, UserPlus } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useShallow } from 'zustand/shallow';
 
@@ -26,8 +27,11 @@ import Waiting from '@/components/Waiting';
 import { StaffEditor } from '@/features/staffs/components';
 import { useStaffStore } from '@/features/staffs/hooks';
 import { Staff } from '@/features/staffs/types';
+import { useUserStore } from '@/features/user/hooks';
 
 export default function ManagementStaffPage() {
+  const router = useRouter();
+
   const { handling, staffs, getStaffs, deleteStaff, updateStaff, createStaff } =
     useStaffStore(
       useShallow((state) => ({
@@ -40,11 +44,29 @@ export default function ManagementStaffPage() {
       }))
     );
 
+  const { role } = useUserStore(
+    useShallow((state) => ({
+      role: state.role,
+    }))
+  );
+
   useEffect(() => {
     getStaffs();
   }, [getStaffs]);
 
   const [editStaff, setEditStaff] = useState<Partial<Staff>>();
+
+  if (role !== 'admin') {
+    return (
+      <div className="container mx-auto p-4 h-full items-center flex flex-col">
+        <div className="text-center">
+          <h1 className="text-3xl font-semibold">Unauthorized</h1>
+          <p className="text-lg">You are not authorized to view this page</p>
+        </div>
+        <Button onClick={() => router.push('/')}>Go Home</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-4 space-y-6">

@@ -322,8 +322,8 @@ export default function ClassroomInfo() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {classroom.students?.map((studentId) => {
-                  const student = students[studentId];
+                {classroom?.students?.map((studentId) => {
+                  const student = students[studentId] ?? {};
                   return (
                     <TableRow key={student.id}>
                       <TableCell className="font-medium">
