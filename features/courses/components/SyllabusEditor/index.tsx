@@ -23,6 +23,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { toast } from '@/hooks/use-toast';
+import formatError from '@/lib/formatError';
 
 const formSchema = z.object({
   week: z.string(),
@@ -57,7 +59,11 @@ export default function SyllabusEditor({
       });
       form.reset();
     } catch (error) {
-      console.error('Form submission error', error);
+      toast({
+        title: 'Error',
+        description: formatError(error),
+        variant: 'destructive',
+      });
     }
   }
 

@@ -23,6 +23,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { toast } from '@/hooks/use-toast';
+import formatError from '@/lib/formatError';
 
 const formSchema = z.object({
   name: z.string(),
@@ -48,7 +50,11 @@ export default function QualificationsEditor({
       onSave(values.name);
       form.reset();
     } catch (error) {
-      console.error('Form submission error', error);
+      toast({
+        title: 'Error',
+        description: formatError(error),
+        variant: 'destructive',
+      });
     }
   }
 
