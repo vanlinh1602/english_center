@@ -3,7 +3,6 @@
 import { onAuthStateChanged } from 'firebase/auth';
 import _ from 'lodash';
 import {
-  Bell,
   BookOpen,
   Calendar,
   Layout,
@@ -49,7 +48,6 @@ export const MainLayout = ({ children }: Props) => {
     const tab = pathName.split('/')[1];
     return tab === '' ? 'dashboard' : tab;
   }, [pathName]);
-  console.log('currentTab', currentTab);
 
   useEffect(() => {
     if (!user && activeTab !== 'login') {
@@ -123,9 +121,9 @@ export const MainLayout = ({ children }: Props) => {
             </h1>
           </div>
           <div className="flex items-center">
-            <Button variant="ghost" size="icon" className="mr-2">
+            {/* <Button variant="ghost" size="icon" className="mr-2">
               <Bell className="h-5 w-5" />
-            </Button>
+            </Button> */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button

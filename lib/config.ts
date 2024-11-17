@@ -26,4 +26,4 @@ export const STAFFS_BACKEND =
 export const USERS_BACKEND =
   process.env.NEXT_PUBLIC_STAGE === 'development'
     ? 'http://localhost:3300/'
-    : 'https://be-english-person.kuma.id.vn/users';
+    : 'https://be-english-auth.kuma.id.vn/';
