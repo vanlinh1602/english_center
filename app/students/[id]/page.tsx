@@ -67,8 +67,6 @@ export default function StudentInfo() {
       student?.courses?.map((courseId) => courses[courseId]).filter((v) => !!v),
     [student, courses]
   );
-  console.log('studentCourses', courses);
-  console.log('student', student);
 
   const studentClasses = useMemo(
     () => Object.values(classes).filter((cls) => cls.students?.includes(id)),

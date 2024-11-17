@@ -47,7 +47,7 @@ export const updateUser = async (
   user: Partial<User>
 ): Promise<boolean> => {
   try {
-    const result = await usersService.post<{ success: boolean }>('/update', {
+    const result = await usersService.put<{ success: boolean }>('/update', {
       id,
       user,
       server: 'management',

@@ -6,7 +6,7 @@ import { Staff } from './types';
 
 export const getStaffs = async (): Promise<Staff[]> => {
   try {
-    const result = await staffsService.get<Staff[]>('/get');
+    const result = await staffsService.get<Staff[]>('');
     if (result.kind === 'ok') {
       return result.data;
     }
@@ -25,7 +25,7 @@ export const getFilterStaff = async (
   filter: Partial<Staff>
 ): Promise<Staff[]> => {
   try {
-    const result = await staffsService.get<Staff[]>('/get', filter);
+    const result = await staffsService.get<Staff[]>('', filter);
     if (result.kind === 'ok') {
       return result.data;
     }
@@ -44,7 +44,7 @@ export const createStaff = async (
   staff: Partial<Staff>
 ): Promise<Staff | null> => {
   try {
-    const result = await staffsService.post<Staff>('/create', { staff });
+    const result = await staffsService.post<Staff>('', { staff });
     if (result.kind === 'ok') {
       return result.data;
     }
@@ -64,7 +64,7 @@ export const updateStaff = async (
   staff: Partial<Staff>
 ): Promise<boolean> => {
   try {
-    const result = await staffsService.post<{ success: boolean }>('/update', {
+    const result = await staffsService.put<{ success: boolean }>('', {
       id,
       staff,
     });
@@ -84,7 +84,7 @@ export const updateStaff = async (
 
 export const deleteStaff = async (id: string): Promise<boolean> => {
   try {
-    const result = await staffsService.post<{ success: boolean }>('/delete', {
+    const result = await staffsService.delete<{ success: boolean }>('', {
       id,
     });
     if (result.kind === 'ok') {
