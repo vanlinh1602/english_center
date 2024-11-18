@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useShallow } from 'zustand/shallow';
 
+import { ConfirmModal } from '@/components/ComfirmModal';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -55,6 +56,7 @@ export default function ManagementStaffPage() {
   }, [getStaffs]);
 
   const [editStaff, setEditStaff] = useState<Partial<Staff>>();
+  const [confirmDelete, setConfirmDelete] = useState<string>();
 
   if (role !== 'admin') {
     return (
@@ -71,6 +73,17 @@ export default function ManagementStaffPage() {
   return (
     <div className="container mx-auto p-4 space-y-6">
       {handling ? <Waiting /> : null}
+      {confirmDelete ? (
+        <ConfirmModal
+          title="Delete User"
+          description="Are you sure you want to delete this user?. This action cannot be undone."
+          onConfirm={() => {
+            deleteStaff(confirmDelete);
+            setConfirmDelete(undefined);
+          }}
+          onCancel={() => setConfirmDelete(undefined)}
+        />
+      ) : null}
       {editStaff ? (
         <StaffEditor
           staff={editStaff}
@@ -135,7 +148,7 @@ export default function ManagementStaffPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => deleteStaff(staff.id)}
+                        onClick={() => setConfirmDelete(staff.id)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

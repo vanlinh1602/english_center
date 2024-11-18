@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useShallow } from 'zustand/shallow';
 
+import { ConfirmModal } from '@/components/ComfirmModal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -72,10 +73,22 @@ export default function CoursesSection() {
   );
 
   const [editCourse, setEditCourse] = useState<Partial<Courses>>();
+  const [confirmDelete, setConfirmDelete] = useState<string>();
 
   return (
     <div className="container mx-auto px-4 py-8">
       {handing ? <Waiting /> : null}
+      {confirmDelete ? (
+        <ConfirmModal
+          title="Delete Course"
+          description="Are you sure you want to delete this course?. This action cannot be undone."
+          onConfirm={() => {
+            deleteCourse(confirmDelete);
+            setConfirmDelete(undefined);
+          }}
+          onCancel={() => setConfirmDelete(undefined)}
+        />
+      ) : null}
       {editCourse ? (
         <CourseEditor
           course={editCourse}
@@ -174,7 +187,7 @@ export default function CoursesSection() {
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           className="text-red-600"
-                          onClick={() => deleteCourse(course.id)}
+                          onClick={() => setConfirmDelete(course.id)}
                         >
                           Delete course
                         </DropdownMenuItem>

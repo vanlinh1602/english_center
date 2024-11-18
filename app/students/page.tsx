@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useShallow } from 'zustand/shallow';
 
+import { ConfirmModal } from '@/components/ComfirmModal';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -64,10 +65,22 @@ export default function StudentSection() {
   );
 
   const [studentEditor, setStudentEditor] = useState<Partial<Student>>();
+  const [confirmDelete, setConfirmDelete] = useState<string>();
 
   return (
     <div className="container mx-auto px-4 py-8">
       {handling ? <Waiting /> : null}
+      {confirmDelete ? (
+        <ConfirmModal
+          title="Delete Student"
+          description="Are you sure you want to delete student?. This action cannot be undone."
+          onConfirm={() => {
+            deleteStudent(confirmDelete);
+            setConfirmDelete(undefined);
+          }}
+          onCancel={() => setConfirmDelete(undefined)}
+        />
+      ) : null}
       {studentEditor ? (
         <StudentEditor
           student={studentEditor}
@@ -157,7 +170,7 @@ export default function StudentSection() {
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           className="text-red-600"
-                          onClick={() => deleteStudent(student.id)}
+                          onClick={() => setConfirmDelete(student.id)}
                         >
                           Delete student
                         </DropdownMenuItem>

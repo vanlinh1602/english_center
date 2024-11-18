@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useShallow } from 'zustand/shallow';
 
+import { ConfirmModal } from '@/components/ComfirmModal';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -39,7 +40,9 @@ import { useClassroomStore } from '@/features/classroom/hooks';
 import { Classroom } from '@/features/classroom/types';
 import { useCourseStore } from '@/features/courses/hooks';
 import { useTeacherStore } from '@/features/teachers/hooks';
+import { toast } from '@/hooks/use-toast';
 import { classStatuses } from '@/lib/options';
+import { checkValidClass } from '@/lib/utils';
 
 export default function ClassSection() {
   const {
@@ -87,6 +90,7 @@ export default function ClassSection() {
   }, []);
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [confrimDelete, setConfirmDelete] = useState<string>();
 
   const filteredClasses = Object.values(classes).filter(
     (cls) =>
@@ -99,6 +103,19 @@ export default function ClassSection() {
   return (
     <div className="container mx-auto px-4 py-8">
       {handling ? <Waiting /> : null}
+      {confrimDelete ? (
+        <ConfirmModal
+          title="Delete class"
+          description={
+            'This action will delete the class. Data cannot be recovered. Please press "Confirm" to continue.'
+          }
+          onConfirm={() => {
+            deleteClass(confrimDelete);
+            setConfirmDelete(undefined);
+          }}
+          onCancel={() => setConfirmDelete(undefined)}
+        />
+      ) : null}
       {classEditor ? (
         <ClassroomEditor
           classroom={classEditor}
@@ -107,6 +124,20 @@ export default function ClassSection() {
             if (id) {
               updateClass(id, classroomUpdate);
             } else {
+              if (
+                !checkValidClass(
+                  classroomUpdate as Classroom,
+                  Object.values(classes)
+                )
+              ) {
+                toast({
+                  title: 'Invalid class',
+                  description:
+                    'The class schedule conflicts with another class',
+                  variant: 'destructive',
+                });
+                return;
+              }
               createClass(classroomUpdate);
             }
             setClassEditor(undefined);
@@ -211,11 +242,10 @@ export default function ClassSection() {
                         <DropdownMenuItem onClick={() => setClassEditor(cls)}>
                           Edit class
                         </DropdownMenuItem>
-                        <DropdownMenuItem>Manage students</DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           className="text-red-600"
-                          onClick={() => deleteClass(cls.id)}
+                          onClick={() => setConfirmDelete(cls.id)}
                         >
                           Delete class
                         </DropdownMenuItem>
