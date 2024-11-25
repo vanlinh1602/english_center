@@ -116,7 +116,7 @@ export default function CourseInfo() {
       });
     }
     if (courseSyllabus) {
-      updateSyllabus(courseSyllabus.course, {
+      updateSyllabus(id, {
         styllabus: currentSyllabus,
       });
     } else {

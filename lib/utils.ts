@@ -20,23 +20,26 @@ export const generateID = (
 
 export const checkValidClass = (cls: Classroom, allClasses: Classroom[]) => {
   const filteredClasses = allClasses.filter((c) => {
-    if (c.room !== cls.room) {
+    if (c.room !== cls.room || c.id === cls.id) {
       return false;
     }
+
     if (
-      (c.schedule.start ?? 0) > (cls.schedule.end ?? 0) &&
-      (c.schedule.end ?? 0) < (cls.schedule.start ?? 0)
+      ((cls.schedule.start! <= c.schedule.start! &&
+        c.schedule.start! <= cls.schedule.end!) ||
+        (cls.schedule.start! <= c.schedule.end! &&
+          c.schedule.end! <= cls.schedule.end!) ||
+        (c.schedule.start! <= cls.schedule.start! &&
+          cls.schedule.start! <= c.schedule.end!) ||
+        (c.schedule.start! <= cls.schedule.end! &&
+          cls.schedule.end! <= c.schedule.end!)) &&
+      c.schedule?.daysInWeek?.some((d) => cls.schedule.daysInWeek?.includes(d))
     ) {
-      return false;
+      return true;
     }
-    if (
-      c.schedule.daysInWeek &&
-      !c.schedule.daysInWeek.some((d) => cls.schedule.daysInWeek?.includes(d))
-    ) {
-      return false;
-    }
-    return true;
+    return false;
   });
+
   if (!filteredClasses.length) return true;
   if (
     filteredClasses.some(

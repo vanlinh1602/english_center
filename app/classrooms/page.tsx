@@ -121,23 +121,22 @@ export default function ClassSection() {
           classroom={classEditor}
           onCancel={() => setClassEditor(undefined)}
           onSave={(classroomUpdate, id) => {
+            if (
+              !checkValidClass(
+                { ...classroomUpdate, id } as Classroom,
+                Object.values(classes)
+              )
+            ) {
+              toast({
+                title: 'Invalid class',
+                description: 'The class schedule conflicts with another class',
+                variant: 'destructive',
+              });
+              return;
+            }
             if (id) {
               updateClass(id, classroomUpdate);
             } else {
-              if (
-                !checkValidClass(
-                  classroomUpdate as Classroom,
-                  Object.values(classes)
-                )
-              ) {
-                toast({
-                  title: 'Invalid class',
-                  description:
-                    'The class schedule conflicts with another class',
-                  variant: 'destructive',
-                });
-                return;
-              }
               createClass(classroomUpdate);
             }
             setClassEditor(undefined);
