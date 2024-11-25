@@ -14,7 +14,8 @@ export const generateID = (
   options: { prefix?: string } = {}
 ): string => {
   const id = `${options?.prefix ?? ''}${nanoid(size)}`;
-  if (ids.includes(id)) return generateID(ids, size, options);
+  if (ids.includes(id) || id.includes('-'))
+    return generateID(ids, size, options);
   return id;
 };
 
