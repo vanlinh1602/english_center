@@ -8,6 +8,16 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+const compareTime = (time1: string, time2: string) => {
+  const [hour1, minute1] = time1.split(':').map(Number);
+  const [hour2, minute2] = time2.split(':').map(Number);
+  if (hour1 > hour2) return 1;
+  if (hour1 < hour2) return -1;
+  if (minute1 > minute2) return 1;
+  if (minute1 < minute2) return -1;
+  return 0;
+};
+
 export const generateID = (
   ids: string[] = [],
   size = 5,
@@ -21,10 +31,6 @@ export const generateID = (
 
 export const checkValidClass = (cls: Classroom, allClasses: Classroom[]) => {
   const filteredClasses = allClasses.filter((c) => {
-    if (c.room !== cls.room || c.id === cls.id) {
-      return false;
-    }
-
     if (
       ((cls.schedule.start! <= c.schedule.start! &&
         c.schedule.start! <= cls.schedule.end!) ||
@@ -43,11 +49,38 @@ export const checkValidClass = (cls: Classroom, allClasses: Classroom[]) => {
 
   if (!filteredClasses.length) return true;
   if (
-    filteredClasses.some(
-      (c) =>
-        c.teachers?.some((t) => cls.teachers?.includes(t)) &&
-        c.schedule.hoursInDay?.start === cls.schedule.hoursInDay?.start
-    )
+    filteredClasses.some((c) => {
+      if (
+        c.room !== cls.room &&
+        c.teachers?.some((t) => cls.teachers?.includes(t))
+      ) {
+        return false;
+      }
+      if (
+        compareTime(
+          cls.schedule.hoursInDay?.start || '',
+          c.schedule.hoursInDay?.start || ''
+        ) >= 0 &&
+        compareTime(
+          cls.schedule.hoursInDay?.start || '',
+          c.schedule.hoursInDay?.end || ''
+        ) <= 0
+      ) {
+        return true;
+      }
+      if (
+        compareTime(
+          cls.schedule.hoursInDay?.end || '',
+          c.schedule.hoursInDay?.start || ''
+        ) >= 0 &&
+        compareTime(
+          cls.schedule.hoursInDay?.end || '',
+          c.schedule.hoursInDay?.end || ''
+        ) <= 0
+      ) {
+        return true;
+      }
+    })
   ) {
     return false;
   }
